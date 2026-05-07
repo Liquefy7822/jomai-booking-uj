@@ -1,0 +1,163 @@
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import type { Booking, MatchmakingPost } from "@/lib/mockData";
+import { initialBookings, initialMatchmakingPosts } from "@/lib/mockData";
+
+interface BookingContextType {
+  bookings: Booking[];
+  matchmakingPosts: MatchmakingPost[];
+  addBooking: (booking: Omit<Booking, "id" | "createdAt">) => void;
+  cancelBooking: (bookingId: string) => void;
+  getUserBookings: (userId: string) => Booking[];
+  addMatchmakingPost: (post: Omit<MatchmakingPost, "id" | "createdAt">) => void;
+  joinMatchmakingPost: (postId: string, userName: string) => void;
+  leaveMatchmakingPost: (postId: string, userName: string) => void;
+}
+
+const BookingContext = createContext<BookingContextType | undefined>(undefined);
+
+export function BookingProvider({ children }: { children: ReactNode }) {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [matchmakingPosts, setMatchmakingPosts] = useState<MatchmakingPost[]>(
+    []
+  );
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    // TODO: Replace with API call to fetch user's bookings
+    const storedBookings = localStorage.getItem("bookit-bookings");
+    if (storedBookings) {
+      setBookings(JSON.parse(storedBookings));
+    } else {
+      setBookings(initialBookings);
+      localStorage.setItem("bookit-bookings", JSON.stringify(initialBookings));
+    }
+
+    // TODO: Replace with API call to fetch matchmaking posts
+    const storedPosts = localStorage.getItem("bookit-matchmaking");
+    if (storedPosts) {
+      setMatchmakingPosts(JSON.parse(storedPosts));
+    } else {
+      setMatchmakingPosts(initialMatchmakingPosts);
+      localStorage.setItem(
+        "bookit-matchmaking",
+        JSON.stringify(initialMatchmakingPosts)
+      );
+    }
+  }, []);
+
+  // Persist bookings to localStorage
+  useEffect(() => {
+    if (bookings.length > 0) {
+      localStorage.setItem("bookit-bookings", JSON.stringify(bookings));
+    }
+  }, [bookings]);
+
+  // Persist matchmaking posts to localStorage
+  useEffect(() => {
+    if (matchmakingPosts.length > 0) {
+      localStorage.setItem(
+        "bookit-matchmaking",
+        JSON.stringify(matchmakingPosts)
+      );
+    }
+  }, [matchmakingPosts]);
+
+  const addBooking = (booking: Omit<Booking, "id" | "createdAt">) => {
+    // TODO: Replace with API call to create booking
+    const newBooking: Booking = {
+      ...booking,
+      id: `booking-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setBookings((prev) => [...prev, newBooking]);
+  };
+
+  const cancelBooking = (bookingId: string) => {
+    // TODO: Replace with API call to cancel booking
+    setBookings((prev) => prev.filter((b) => b.id !== bookingId));
+  };
+
+  const getUserBookings = (userId: string): Booking[] => {
+    // TODO: Replace with API call to fetch user's bookings
+    return bookings.filter((b) => b.userId === userId);
+  };
+
+  const addMatchmakingPost = (
+    post: Omit<MatchmakingPost, "id" | "createdAt">
+  ) => {
+    // TODO: Replace with API call to create matchmaking post
+    const newPost: MatchmakingPost = {
+      ...post,
+      id: `match-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setMatchmakingPosts((prev) => [...prev, newPost]);
+  };
+
+  const joinMatchmakingPost = (postId: string, userName: string) => {
+    // TODO: Replace with API call to join matchmaking post
+    setMatchmakingPosts((prev) =>
+      prev.map((post) => {
+        if (
+          post.id === postId &&
+          !post.currentPlayers.includes(userName) &&
+          post.currentPlayers.length < post.playersNeeded
+        ) {
+          return {
+            ...post,
+            currentPlayers: [...post.currentPlayers, userName],
+          };
+        }
+        return post;
+      })
+    );
+  };
+
+  const leaveMatchmakingPost = (postId: string, userName: string) => {
+    // TODO: Replace with API call to leave matchmaking post
+    setMatchmakingPosts((prev) =>
+      prev.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            currentPlayers: post.currentPlayers.filter((p) => p !== userName),
+          };
+        }
+        return post;
+      })
+    );
+  };
+
+  return (
+    <BookingContext.Provider
+      value={{
+        bookings,
+        matchmakingPosts,
+        addBooking,
+        cancelBooking,
+        getUserBookings,
+        addMatchmakingPost,
+        joinMatchmakingPost,
+        leaveMatchmakingPost,
+      }}
+    >
+      {children}
+    </BookingContext.Provider>
+  );
+}
+
+export function useBooking() {
+  const context = useContext(BookingContext);
+  if (context === undefined) {
+    throw new Error("useBooking must be used within a BookingProvider");
+  }
+  return context;
+}
