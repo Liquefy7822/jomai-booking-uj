@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { UserProvider } from "@/context/UserContext";
 import { BookingProvider } from "@/context/BookingContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BookIt - Tampines Facility Booking",
+  title: "BookIt - Tampines Badminton Court Booking",
   description:
-    "Book sports facilities in Tampines. Badminton courts, tennis courts, basketball courts, and more.",
+    "Book badminton courts in Tampines. Easy online booking for Tampines residents.",
   generator: "v0.app",
   icons: {
     icon: [
@@ -57,9 +58,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <UserProvider>
-          <BookingProvider>{children}</BookingProvider>
-        </UserProvider>
+        <ThemeProvider>
+          <UserProvider>
+            <BookingProvider>{children}</BookingProvider>
+          </UserProvider>
+        </ThemeProvider>
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>

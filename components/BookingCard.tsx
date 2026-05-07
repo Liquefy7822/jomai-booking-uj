@@ -9,12 +9,13 @@ import { Calendar, Clock, MapPin, Users } from "lucide-react";
 
 interface BookingCardProps {
   booking: Booking;
-  onCancel: () => void;
+  onCancel?: () => void;
+  isPast?: boolean;
 }
 
-export function BookingCard({ booking, onCancel }: BookingCardProps) {
+export function BookingCard({ booking, onCancel, isPast: isPastProp }: BookingCardProps) {
   const court = getCourtById(booking.courtId);
-  const isPast = new Date(booking.date) < new Date(new Date().toDateString());
+  const isPast = isPastProp ?? new Date(booking.date) < new Date(new Date().toDateString());
 
   return (
     <Card className={isPast ? "opacity-60" : ""}>
@@ -55,7 +56,7 @@ export function BookingCard({ booking, onCancel }: BookingCardProps) {
         </div>
 
         {/* Action */}
-        {!isPast && (
+        {!isPast && onCancel && (
           <div className="mt-4">
             <Button variant="outline" size="sm" onClick={onCancel}>
               Cancel Booking
