@@ -5,24 +5,11 @@ import type { Court } from "@/lib/mockData";
 import { MapPin, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface CourtCardProps {
   court: Court;
 }
-
-const courtTypeColors: Record<Court["type"], string> = {
-  badminton: "bg-emerald-100 text-emerald-800",
-  tennis: "bg-amber-100 text-amber-800",
-  basketball: "bg-orange-100 text-orange-800",
-  futsal: "bg-sky-100 text-sky-800",
-};
-
-const courtTypeLabels: Record<Court["type"], string> = {
-  badminton: "Badminton",
-  tennis: "Tennis",
-  basketball: "Basketball",
-  futsal: "Futsal",
-};
 
 export function CourtCard({ court }: CourtCardProps) {
   return (
@@ -30,23 +17,26 @@ export function CourtCard({ court }: CourtCardProps) {
       <Card className="overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
         <CardContent className="p-0">
           {/* Court Image Placeholder */}
-          <div className="relative h-32 bg-gradient-to-br from-muted to-muted/50">
+          <div className="relative h-32 bg-gradient-to-br from-primary/10 to-primary/5">
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-4xl opacity-50">
-                {court.type === "badminton" && "🏸"}
-                {court.type === "tennis" && "🎾"}
-                {court.type === "basketball" && "🏀"}
-                {court.type === "futsal" && "⚽"}
-              </span>
+              <svg
+                className="h-16 w-16 text-primary/20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <rect x="2" y="6" width="20" height="12" rx="1" />
+                <line x1="12" y1="6" x2="12" y2="18" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <circle cx="12" cy="12" r="2" />
+              </svg>
             </div>
             <Badge
-              className={cn(
-                "absolute left-3 top-3",
-                courtTypeColors[court.type]
-              )}
+              className="absolute left-3 top-3 bg-primary/90 text-primary-foreground"
               variant="secondary"
             >
-              {courtTypeLabels[court.type]}
+              ${court.pricePerHour}/hr
             </Badge>
           </div>
 
@@ -84,8 +74,4 @@ export function CourtCard({ court }: CourtCardProps) {
       </Card>
     </Link>
   );
-}
-
-function cn(...classes: (string | undefined | false)[]) {
-  return classes.filter(Boolean).join(" ");
 }

@@ -10,11 +10,12 @@ export interface User {
 export interface Court {
   id: string;
   name: string;
-  type: "badminton" | "tennis" | "basketball" | "futsal";
+  type: "badminton";
   location: string;
   description: string;
   imageUrl: string;
   amenities: string[];
+  pricePerHour: number;
 }
 
 export interface TimeSlot {
@@ -56,57 +57,73 @@ export interface MatchmakingPost {
   createdAt: string;
 }
 
-// Mock Courts Data
+// Mock Courts Data - Badminton only
 export const courts: Court[] = [
   {
     id: "court-1",
-    name: "Badminton Court A",
+    name: "Badminton Court 1",
     type: "badminton",
     location: "Tampines Hub, Level 2",
     description:
-      "Professional-grade indoor badminton court with excellent lighting and air conditioning.",
-    imageUrl: "/courts/badminton-a.jpg",
-    amenities: ["Air-conditioned", "Professional lighting", "Shower facilities"],
+      "Professional-grade indoor badminton court with excellent lighting and air conditioning. Ideal for competitive play.",
+    imageUrl: "/courts/badminton-1.jpg",
+    amenities: ["Air-conditioned", "Professional lighting", "Shower facilities", "Spectator seating"],
+    pricePerHour: 8,
   },
   {
     id: "court-2",
-    name: "Badminton Court B",
+    name: "Badminton Court 2",
     type: "badminton",
     location: "Tampines Hub, Level 2",
     description:
-      "Standard indoor badminton court suitable for recreational play and practice.",
-    imageUrl: "/courts/badminton-b.jpg",
+      "Standard indoor badminton court suitable for recreational play and practice sessions.",
+    imageUrl: "/courts/badminton-2.jpg",
     amenities: ["Air-conditioned", "Standard lighting", "Locker rooms"],
+    pricePerHour: 8,
   },
   {
     id: "court-3",
-    name: "Tennis Court 1",
-    type: "tennis",
-    location: "Tampines Sports Complex",
+    name: "Badminton Court 3",
+    type: "badminton",
+    location: "Tampines Hub, Level 2",
     description:
-      "Outdoor hard court tennis facility with night lighting available.",
-    imageUrl: "/courts/tennis-1.jpg",
-    amenities: ["Night lighting", "Spectator seating", "Equipment rental"],
+      "Spacious court with premium flooring. Perfect for doubles matches and training.",
+    imageUrl: "/courts/badminton-3.jpg",
+    amenities: ["Air-conditioned", "Professional lighting", "Equipment rental"],
+    pricePerHour: 10,
   },
   {
     id: "court-4",
-    name: "Basketball Court",
-    type: "basketball",
-    location: "Our Tampines Hub, Rooftop",
+    name: "Badminton Court 4",
+    type: "badminton",
+    location: "Our Tampines Hub, Level 3",
     description:
-      "Full-sized outdoor basketball court with great views of Tampines.",
-    imageUrl: "/courts/basketball.jpg",
-    amenities: ["Night lighting", "Drinking fountain", "Spectator area"],
+      "Modern facility with state-of-the-art ventilation and cushioned flooring.",
+    imageUrl: "/courts/badminton-4.jpg",
+    amenities: ["Air-conditioned", "Professional lighting", "Shower facilities", "Pro shop nearby"],
+    pricePerHour: 10,
   },
   {
     id: "court-5",
-    name: "Futsal Pitch",
-    type: "futsal",
+    name: "Badminton Court 5",
+    type: "badminton",
+    location: "Our Tampines Hub, Level 3",
+    description:
+      "Budget-friendly court ideal for casual games and beginners. Well-maintained facility.",
+    imageUrl: "/courts/badminton-5.jpg",
+    amenities: ["Ventilated", "Standard lighting", "Water cooler"],
+    pricePerHour: 6,
+  },
+  {
+    id: "court-6",
+    name: "Badminton Court 6",
+    type: "badminton",
     location: "Tampines Sports Hall",
     description:
-      "Indoor futsal pitch with synthetic turf and professional goals.",
-    imageUrl: "/courts/futsal.jpg",
-    amenities: ["Indoor facility", "Changing rooms", "First aid station"],
+      "Competition-grade court used for tournaments. Premium Yonex flooring installed.",
+    imageUrl: "/courts/badminton-6.jpg",
+    amenities: ["Air-conditioned", "Competition lighting", "Referee stand", "Scoreboard"],
+    pricePerHour: 12,
   },
 ];
 
@@ -126,14 +143,17 @@ const generateTimeSlots = (): TimeSlot[] => {
         const startTime = `${hour.toString().padStart(2, "0")}:00`;
         const endTime = `${(hour + 1).toString().padStart(2, "0")}:00`;
 
+        // Simulate some slots being unavailable (about 30%)
+        const isAvailable = Math.random() > 0.3;
+
         slots.push({
           id: `slot-${court.id}-${dateStr}-${hour}`,
           courtId: court.id,
           date: dateStr,
           startTime,
           endTime,
-          isAvailable: Math.random() > 0.3, // 70% availability
-          price: court.type === "badminton" ? 8 : court.type === "tennis" ? 12 : 15,
+          isAvailable,
+          price: court.pricePerHour,
         });
       }
     }
@@ -202,13 +222,13 @@ export const initialMatchmakingPosts: MatchmakingPost[] = [
   {
     id: "match-1",
     courtId: "court-1",
-    courtName: "Badminton Court A",
+    courtName: "Badminton Court 1",
     userId: "user-1",
     userName: "John Tan",
     date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     startTime: "18:00",
     endTime: "19:00",
-    playersNeeded: 2,
+    playersNeeded: 4,
     currentPlayers: ["John Tan"],
     skillLevel: "intermediate",
     description:
@@ -218,13 +238,13 @@ export const initialMatchmakingPosts: MatchmakingPost[] = [
   {
     id: "match-2",
     courtId: "court-3",
-    courtName: "Tennis Court 1",
+    courtName: "Badminton Court 3",
     userId: "user-3",
     userName: "David Wong",
     date: new Date(Date.now() + 172800000).toISOString().split("T")[0],
     startTime: "09:00",
     endTime: "10:00",
-    playersNeeded: 1,
+    playersNeeded: 2,
     currentPlayers: ["David Wong"],
     skillLevel: "advanced",
     description:
@@ -234,17 +254,17 @@ export const initialMatchmakingPosts: MatchmakingPost[] = [
   {
     id: "match-3",
     courtId: "court-4",
-    courtName: "Basketball Court",
+    courtName: "Badminton Court 4",
     userId: "user-2",
     userName: "Mary Lim",
     date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     startTime: "16:00",
     endTime: "17:00",
-    playersNeeded: 8,
+    playersNeeded: 4,
     currentPlayers: ["Mary Lim", "Alex Ng"],
     skillLevel: "beginner",
     description:
-      "Organizing a friendly 4v4 game. Beginners welcome! Come join us for some fun.",
+      "Friendly doubles game for beginners. Come join us for some fun!",
     createdAt: new Date().toISOString(),
   },
 ];
@@ -258,16 +278,6 @@ export const getSlotsByCourtAndDate = (
   date: string
 ): TimeSlot[] =>
   timeSlots.filter((s) => s.courtId === courtId && s.date === date);
-
-export const getCourtTypeIcon = (type: Court["type"]): string => {
-  const icons: Record<Court["type"], string> = {
-    badminton: "🏸",
-    tennis: "🎾",
-    basketball: "🏀",
-    futsal: "⚽",
-  };
-  return icons[type];
-};
 
 export const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);

@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BookIt - Tampines Facility Booking",
+  title: "BookIt - Tampines Badminton Court Booking",
   description:
-    "Book sports facilities in Tampines. Badminton courts, tennis courts, basketball courts, and more.",
+    "Book badminton courts in Tampines. Easy online booking for Tampines residents.",
   generator: "v0.app",
   icons: {
     icon: [
