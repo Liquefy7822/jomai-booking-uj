@@ -12,8 +12,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, X, Home, Users, User, LogOut, Calendar } from "lucide-react";
+import { Menu, Home, Users, User, LogOut, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navItems = [
   { href: "/home", label: "Courts", icon: Home },
@@ -63,6 +64,7 @@ export function Navbar() {
               );
             })}
             <div className="ml-2 h-4 w-px bg-border" />
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"
@@ -133,8 +135,12 @@ export function Navbar() {
                 })}
               </nav>
 
-              {/* Sign Out Button */}
-              <div className="mt-auto pt-6">
+              {/* Theme & Sign Out */}
+              <div className="mt-auto space-y-3 pt-6">
+                <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                  <span className="text-sm text-muted-foreground">Theme</span>
+                  <ThemeToggle />
+                </div>
                 <Button
                   variant="outline"
                   className="w-full"
