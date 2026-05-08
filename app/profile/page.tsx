@@ -174,7 +174,6 @@ export default function ProfilePage() {
                     </p>
                   </CardContent>
                 </Card>
-              </div>
             </div>
 
             {/* Right Column - Bookings */}
