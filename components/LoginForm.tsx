@@ -12,7 +12,6 @@ import { Loader2 } from "lucide-react";
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useUser();
   const router = useRouter();
@@ -27,14 +26,8 @@ export function LoginForm() {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Check if admin credentials
-    const isAdmin = 
-      name.toLowerCase() === "admin" && 
-      email.toLowerCase() === "admin@admin" && 
-      password === "admin";
-
-    login(email, name, password);
-    router.push(isAdmin ? "/admin" : "/home");
+    login(email, name);
+    router.push("/home");
   };
 
   return (
@@ -77,11 +70,10 @@ export function LoginForm() {
               id="password"
               type="password"
               placeholder="Enter any password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              defaultValue="password123"
             />
             <p className="text-xs text-muted-foreground">
-              Demo mode: Any password works (admin: admin/admin@admin/admin)
+              Demo mode: Any password works
             </p>
           </div>
 

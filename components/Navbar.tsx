@@ -12,7 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, Home, Users, User, LogOut, Calendar, Shield } from "lucide-react";
+import { Menu, Home, Users, User, LogOut, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -20,12 +20,6 @@ const navItems = [
   { href: "/home", label: "Courts", icon: Home },
   { href: "/matchmaking", label: "Find Players", icon: Users },
   { href: "/profile", label: "Profile", icon: User },
-];
-
-const adminNavItems = [
-  { href: "/admin", label: "Dashboard", icon: Shield },
-  { href: "/home", label: "Courts", icon: Home },
-  { href: "/matchmaking", label: "Find Players", icon: Users },
 ];
 
 export function Navbar() {
@@ -52,7 +46,7 @@ export function Navbar() {
         {/* Desktop Navigation */}
         {user && (
           <nav className="hidden items-center gap-1 md:flex">
-            {(user.isAdmin ? adminNavItems : navItems).map((item) => {
+            {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -69,11 +63,6 @@ export function Navbar() {
                 </Link>
               );
             })}
-            {user.isAdmin && (
-              <span className="ml-1 rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                Admin
-              </span>
-            )}
             <div className="ml-2 h-4 w-px bg-border" />
             <ThemeToggle />
             <Button
@@ -111,19 +100,12 @@ export function Navbar() {
               <div className="mt-6 rounded-lg border border-border bg-muted/30 p-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    {user.isAdmin ? <Shield className="h-5 w-5" /> : <User className="h-5 w-5" />}
+                    <User className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-foreground">
-                        {user.name}
-                      </p>
-                      {user.isAdmin && (
-                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
-                          Admin
-                        </span>
-                      )}
-                    </div>
+                    <p className="text-sm font-medium text-foreground">
+                      {user.name}
+                    </p>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
                 </div>
@@ -131,7 +113,7 @@ export function Navbar() {
 
               {/* Navigation Links */}
               <nav className="mt-6 flex flex-col gap-1">
-                {(user.isAdmin ? adminNavItems : navItems).map((item) => {
+                {navItems.map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
                   return (
