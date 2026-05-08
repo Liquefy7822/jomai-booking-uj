@@ -1,4 +1,4 @@
-import { courts } from './mockCourts.js';
+import { courts } from './mockCourts';
 import type { Court } from './types';
 
 // Mock Courts Data - Badminton only
