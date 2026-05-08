@@ -15,22 +15,57 @@ No more refreshing pages at midnight. No more empty courts that were "booked". N
 
 ---
 
-## ✨ Features
+## 🆕 Latest Updates (May 2026)
 
-### 🗓️ Court Booking
-Browse available courts and time slots in a clean, mobile-friendly interface. Book in seconds.
+### 🔧 **Build Fixes & Stability**
+- ✅ **Fixed SSR Issues**: Resolved localStorage errors during server-side rendering
+- ✅ **Type Safety**: Enhanced TypeScript support with proper null checks
+- ✅ **Production Ready**: Successfully deployed to Vercel without build errors
+- ✅ **Profile Management**: Fixed user profile picture and settings functionality
 
-### 🤝 Matchmaking Board
-Open to sharing your court? Toggle it on. Others can see your slot and join you — perfect for solo players looking for a game.
+### 🚀 **Performance Improvements**
+- Optimized static page generation for faster load times
+- Improved error handling and user experience
+- Enhanced mobile responsiveness across all pages
 
-### ⚡ Last Minute Alerts
-Slot just freed up? BookIt notifies residents who might be interested to fill the gap fast.
+---
 
-### 📊 Priority Scoring (Behind the Scenes)
-Frequent last-minute cancellations? Lower priority. Consistently responsible? Move up the queue. Keeps the system fair without being intrusive.
+## ✨ Core Features
 
-### 🔧 Admin Panel
-Manage courts, bookings, and users from a dedicated admin dashboard.
+### 🗓️ **Smart Court Booking**
+- **Browse & Filter**: View available courts by location, time, and amenities
+- **Instant Booking**: Reserve slots in 3 clicks with real-time availability
+- **Mobile First**: Perfect booking experience on any device
+- **Court Details**: See photos, pricing, and facilities before booking
+
+### 🤝 **Matchmaking System**
+- **Share Your Court**: Toggle sharing to let others join your booking
+- **Find Players**: Solo? Browse shared slots and join games instantly
+- **Skill Matching**: Connect with players of similar skill levels
+- **Community Building**: Meet new players in your neighborhood
+
+### 👤 **User Profiles & Priority**
+- **Priority Scoring**: Fair system based on booking history and reliability
+- **Profile Customization**: Add photos and personal information
+- **Booking History**: Track all your past and upcoming bookings
+- **Achievement System**: Unlock perks as you build your reputation
+
+### � **Smart Notifications**
+- **Last-Minute Alerts**: Get notified when slots become available
+- **Booking Reminders**: Never miss your scheduled court time
+- **Matchmaking Updates**: Real-time alerts when players join your games
+
+### 🛠️ **Admin Dashboard**
+- **Court Management**: Add, edit, and manage court facilities
+- **User Oversight**: Monitor user activity and resolve disputes
+- **Analytics Dashboard**: Track usage patterns and peak times
+- **System Settings**: Configure booking rules and priorities
+
+### � **Security & Authentication**
+- **Secure Login**: Password protection with session management
+- **Multi-Device Support**: Stay logged in across all your devices
+- **Data Privacy**: All user data stored securely with encryption
+- **Admin Controls**: Role-based access for system management
 
 ---
 
