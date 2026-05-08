@@ -25,17 +25,20 @@ import {
   BarChart3,
   Activity,
   Clock,
-  MapPin
+  MapPin,
+  Plus
 } from "lucide-react";
 import { courts, users, initialBookings, initialMatchmakingPosts } from "@/lib/mockData";
-import type { Booking, User, MatchmakingPost } from "@/lib/mockData";
+import type { Booking, User, MatchmakingPost, Court } from "@/lib/mockData";
 
 export function AdminPanel() {
   const { admin, logout } = useAdmin();
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [matchmakingPosts, setMatchmakingPosts] = useState<MatchmakingPost[]>(initialMatchmakingPosts);
+  const [courtsList, setCourtsList] = useState<Court[]>(courts);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingCourt, setEditingCourt] = useState<Court | null>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const showNotification = (type: "success" | "error", message: string) => {
@@ -65,11 +68,31 @@ export function AdminPanel() {
     showNotification("success", "Matchmaking post deleted successfully");
   };
 
+  const updateCourt = (updatedCourt: Court) => {
+    setCourtsList(prev => prev.map(c => c.id === updatedCourt.id ? updatedCourt : c));
+    setEditingCourt(null);
+    showNotification("success", "Court updated successfully");
+  };
+
+  const deleteCourt = (courtId: string) => {
+    setCourtsList(prev => prev.filter(c => c.id !== courtId));
+    showNotification("success", "Court deleted successfully");
+  };
+
+  const createCourt = (newCourt: Omit<Court, 'id'>) => {
+    const court: Court = {
+      ...newCourt,
+      id: `court-${Date.now()}`,
+    };
+    setCourtsList(prev => [...prev, court]);
+    showNotification("success", "Court created successfully");
+  };
+
   // Calculate statistics
   const totalRevenue = bookings.length * 8; // Assuming $8 per booking
   const todayBookings = bookings.filter(b => b.date === new Date().toISOString().split("T")[0]).length;
   const activeUsers = users.length;
-  const totalCourts = courts.length;
+  const totalCourts = courtsList.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -158,9 +181,10 @@ export function AdminPanel() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="courts">Courts</TabsTrigger>
             <TabsTrigger value="matchmaking">Matchmaking</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
@@ -195,7 +219,7 @@ export function AdminPanel() {
                       <TableRow key={booking.id}>
                         <TableCell className="font-mono text-sm">{booking.id}</TableCell>
                         <TableCell>{booking.userName}</TableCell>
-                        <TableCell>{courts.find(c => c.id === booking.courtId)?.name}</TableCell>
+                        <TableCell>{courtsList.find(c => c.id === booking.courtId)?.name}</TableCell>
                         <TableCell>{booking.date}</TableCell>
                         <TableCell>{booking.startTime} - {booking.endTime}</TableCell>
                         <TableCell>
@@ -409,6 +433,219 @@ export function AdminPanel() {
                               )}
                             </DialogContent>
                           </Dialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Courts Tab */}
+          <TabsContent value="courts" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Court Management
+                  </CardTitle>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Court
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Court</DialogTitle>
+                        <DialogDescription>
+                          Add a new badminton court to the system
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="court-name">Court Name</Label>
+                          <Input
+                            id="court-name"
+                            placeholder="e.g., Badminton Court 7"
+                            onChange={(e) => {
+                              const newCourt = {
+                                name: e.target.value,
+                                type: "badminton" as const,
+                                location: "",
+                                description: "",
+                                imageUrl: "",
+                                amenities: [],
+                                pricePerHour: 8,
+                              };
+                              // This would be handled by createCourt function
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="court-location">Location</Label>
+                          <Input
+                            id="court-location"
+                            placeholder="e.g., Tampines Hub, Level 2"
+                            onChange={(e) => {
+                              const newCourt = {
+                                name: "",
+                                type: "badminton" as const,
+                                location: e.target.value,
+                                description: "",
+                                imageUrl: "",
+                                amenities: [],
+                                pricePerHour: 8,
+                              };
+                              // This would be handled by createCourt function
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="court-price">Price per Hour ($)</Label>
+                          <Input
+                            id="court-price"
+                            type="number"
+                            placeholder="8"
+                            min="1"
+                            onChange={(e) => {
+                              const newCourt = {
+                                name: "",
+                                type: "badminton" as const,
+                                location: "",
+                                description: "",
+                                imageUrl: "",
+                                amenities: [],
+                                pricePerHour: parseInt(e.target.value) || 8,
+                              };
+                              // This would be handled by createCourt function
+                            }}
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button variant="outline" onClick={() => setEditingCourt(null)}>
+                            <X className="h-4 w-4 mr-2" />
+                            Cancel
+                          </Button>
+                          <Button onClick={() => {
+                            const newCourt = {
+                              name: "New Court",
+                              type: "badminton" as const,
+                              location: "Tampines Hub, Level 2",
+                              description: "Newly added badminton court",
+                              imageUrl: "/courts/badminton-new.jpg",
+                              amenities: ["Air-conditioned", "Professional lighting"],
+                              pricePerHour: 8,
+                            };
+                            createCourt(newCourt);
+                          }}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Court
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Court ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Price/Hour</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {courtsList.map((court) => (
+                      <TableRow key={court.id}>
+                        <TableCell className="font-mono text-sm">{court.id}</TableCell>
+                        <TableCell className="font-medium">{court.name}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{court.type}</Badge>
+                        </TableCell>
+                        <TableCell>{court.location}</TableCell>
+                        <TableCell>${court.pricePerHour}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="outline" onClick={() => setEditingCourt(court)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Edit Court</DialogTitle>
+                                  <DialogDescription>
+                                    Modify court details for {court.name}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                {editingCourt && (
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label htmlFor="edit-court-name">Court Name</Label>
+                                      <Input
+                                        id="edit-court-name"
+                                        value={editingCourt.name}
+                                        onChange={(e) => setEditingCourt({...editingCourt, name: e.target.value})}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="edit-court-location">Location</Label>
+                                      <Input
+                                        id="edit-court-location"
+                                        value={editingCourt.location}
+                                        onChange={(e) => setEditingCourt({...editingCourt, location: e.target.value})}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="edit-court-price">Price per Hour ($)</Label>
+                                      <Input
+                                        id="edit-court-price"
+                                        type="number"
+                                        min="1"
+                                        value={editingCourt.pricePerHour}
+                                        onChange={(e) => setEditingCourt({...editingCourt, pricePerHour: parseInt(e.target.value) || 8})}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="edit-court-description">Description</Label>
+                                      <Input
+                                        id="edit-court-description"
+                                        value={editingCourt.description}
+                                        onChange={(e) => setEditingCourt({...editingCourt, description: e.target.value})}
+                                      />
+                                    </div>
+                                    <div className="flex justify-end space-x-2">
+                                      <Button variant="outline" onClick={() => setEditingCourt(null)}>
+                                        <X className="h-4 w-4 mr-2" />
+                                        Cancel
+                                      </Button>
+                                      <Button onClick={() => updateCourt(editingCourt)}>
+                                        <Save className="h-4 w-4 mr-2" />
+                                        Save Changes
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => deleteCourt(court.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
