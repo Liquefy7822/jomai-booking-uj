@@ -9,7 +9,7 @@ import {
   getSlotsByCourtAndDate,
   formatTime,
   type TimeSlot,
-} from "@/lib/mockData";
+} from "@/lib/data";
 import { Navbar } from "@/components/Navbar";
 import { DatePicker } from "@/components/DatePicker";
 import { TimeSlotPicker } from "@/components/TimeSlotPicker";

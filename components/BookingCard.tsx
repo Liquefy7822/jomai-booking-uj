@@ -1,7 +1,7 @@
 "use client";
 
-import type { Booking } from "@/lib/mockData";
-import { formatDate, formatTime, getCourtById } from "@/lib/mockData";
+import type { Booking } from "@/lib/data";
+import { formatDate, formatTime, getCourtById } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
