@@ -175,9 +175,10 @@ export default function ProfilePage() {
                   </CardContent>
                 </Card>
               </div>
+            </div>
 
-              {/* Right Column - Bookings */}
-              <div className="lg:col-span-2 space-y-6">
+            {/* Right Column - Bookings */}
+            <div className="lg:col-span-2 space-y-6">
                 {/* Upcoming Bookings */}
                 <div>
                   <div className="mb-3 flex items-center justify-between">
@@ -212,11 +213,7 @@ export default function ProfilePage() {
                           booking={booking}
                           onCancel={() => {
                             // TODO: Replace with API call to cancel booking
-                            if (
-                              confirm(
-                                "Are you sure you want to cancel this booking?"
-                              )
-                            ) {
+                            if (confirm("Are you sure you want to cancel this booking?")) {
                               cancelBooking(booking.id);
                             }
                           }}
@@ -250,6 +247,5 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
