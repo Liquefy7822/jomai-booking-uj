@@ -12,23 +12,21 @@ import Link from "next/link";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useUser();
+  const { login, error } = useUser();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !name) return;
+    if (!email || !password) return;
 
     setIsLoading(true);
 
-    // TODO: Replace with real API authentication
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    login(email, name);
-    router.push("/home");
+    const success = await login(email, password);
+    if (success) {
+      router.push("/home");
+    }
   };
 
   return (
@@ -40,21 +38,15 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {error && (
+          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="John Tan"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
               type="email"
@@ -62,6 +54,7 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -70,12 +63,12 @@ export function LoginForm() {
             <Input
               id="password"
               type="password"
-              placeholder="Enter any password"
-              defaultValue="password123"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
-              Demo mode: Any password works
-            </p>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>

@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { useBooking } from "@/context/BookingContext";
 import { BookingCard } from "@/components/BookingCard";
-import { EditProfileForm } from "@/components/EditProfileForm";
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -15,14 +13,14 @@ import {
   Trophy,
   Calendar,
   TrendingUp,
-  Edit,
+  Settings,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function ProfilePage() {
   const { user, isLoading: userLoading } = useUser();
   const { bookings, cancelBooking } = useBooking();
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -74,30 +72,30 @@ export default function ProfilePage() {
               Manage your bookings and view your priority score
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2"
-          >
-            <Edit className="h-4 w-4" />
-            Edit Profile
-          </Button>
         </div>
       </div>
 
       <div className="px-4 py-6">
         <div className="mx-auto max-w-5xl">
-          {isEditing ? (
-            <EditProfileForm onCancel={() => setIsEditing(false)} />
-          ) : (
-            <div className="grid gap-6 lg:grid-cols-3">
-              {/* Left Column - User Info & Priority */}
-              <div className="space-y-6">
-                {/* User Info Card */}
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Profile</h2>
+            <Link href="/profile/settings">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Account Settings
+              </Button>
+            </Link>
+          </div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Left Column - User Info & Priority */}
+            <div className="space-y-6">
+              {/* User Info Card */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    {/* Avatar */}
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <User className="h-7 w-7" />
                       {/* Avatar */}
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                         <User className="h-7 w-7" />

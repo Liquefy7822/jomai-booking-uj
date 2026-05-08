@@ -7,14 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, User, ArrowLeft } from "lucide-react";
+import { Loader2, Mail, User, ArrowLeft, Lock } from "lucide-react";
 import Link from "next/link";
 
 export function RegisterForm() {
-  const { register } = useUser();
+  const { register, error } = useUser();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +37,16 @@ export function RegisterForm() {
       newErrors.email = "Please enter a valid email address";
     }
 
+    if (!formData.password.trim()) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -48,12 +60,10 @@ export function RegisterForm() {
     setErrors({});
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Register the user
-      register(formData.email, formData.name);
-      setSuccess(true);
+      const success = await register(formData.email, formData.name, formData.password);
+      if (success) {
+        setSuccess(true);
+      }
     } catch (error) {
       setErrors({ submit: "Registration failed. Please try again." });
     } finally {
@@ -99,6 +109,12 @@ export function RegisterForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {error && (
+          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           {errors.submit && (
             <Alert variant="destructive">
@@ -141,6 +157,44 @@ export function RegisterForm() {
             </div>
             {errors.email && (
               <p className="text-sm text-destructive">{errors.email}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="Create a password"
+                value={formData.password}
+                onChange={handleChange("password")}
+                className="pl-10"
+                disabled={isLoading}
+              />
+            </div>
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChange={handleChange("confirmPassword")}
+                className="pl-10"
+                disabled={isLoading}
+              />
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-sm text-destructive">{errors.confirmPassword}</p>
             )}
           </div>
 
