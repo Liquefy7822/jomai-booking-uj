@@ -11,7 +11,7 @@ import type { User } from "@/lib/mockData";
 
 interface UserContextType {
   user: User | null;
-  login: (email: string, name: string, password?: string) => void;
+  login: (email: string, name: string) => void;
   logout: () => void;
   isLoading: boolean;
 }
@@ -32,22 +32,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = (email: string, name: string, password?: string) => {
+  const login = (email: string, name: string) => {
     // TODO: Replace with real API call to authenticate user
-    
-    // Check for admin credentials
-    const isAdmin = 
-      name.toLowerCase() === "admin" && 
-      email.toLowerCase() === "admin@admin" && 
-      password === "admin";
-    
     const newUser: User = {
-      id: isAdmin ? "admin-1" : `user-${Date.now()}`,
+      id: `user-${Date.now()}`,
       email,
-      name: isAdmin ? "Administrator" : name,
-      priorityScore: isAdmin ? 100 : Math.floor(Math.random() * 30) + 70,
+      name,
+      priorityScore: Math.floor(Math.random() * 30) + 70, // Random score 70-100 for demo
       createdAt: new Date().toISOString(),
-      isAdmin,
     };
     setUser(newUser);
     localStorage.setItem("bookit-user", JSON.stringify(newUser));
