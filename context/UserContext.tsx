@@ -12,6 +12,7 @@ import type { User } from "@/lib/mockData";
 interface UserContextType {
   user: User | null;
   login: (email: string, name: string) => void;
+  register: (email: string, name: string) => void;
   logout: () => void;
   isLoading: boolean;
 }
@@ -45,6 +46,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("bookit-user", JSON.stringify(newUser));
   };
 
+  const register = (email: string, name: string) => {
+    // TODO: Replace with real API call to register user
+    const newUser: User = {
+      id: `user-${Date.now()}`,
+      email,
+      name,
+      priorityScore: Math.floor(Math.random() * 30) + 70, // Random score 70-100 for demo
+      createdAt: new Date().toISOString(),
+    };
+    setUser(newUser);
+    localStorage.setItem("bookit-user", JSON.stringify(newUser));
+  };
+
   const logout = () => {
     // TODO: Replace with real API call to invalidate session
     setUser(null);
@@ -52,7 +66,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout, isLoading }}>
+    <UserContext.Provider value={{ user, login, register, logout, isLoading }}>
       {children}
     </UserContext.Provider>
   );

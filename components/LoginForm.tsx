@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
+import Link from "next/link";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -87,6 +88,16 @@ export function LoginForm() {
               "Sign In"
             )}
           </Button>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              New to JomAI Booking?{" "}
+              <Link href="/register" className="text-primary hover:underline inline-flex items-center gap-1">
+                <UserPlus className="h-3 w-3" />
+                Create Account
+              </Link>
+            </p>
+          </div>
         </form>
       </CardContent>
     </Card>
