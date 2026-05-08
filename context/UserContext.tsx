@@ -15,6 +15,11 @@ import {
   changeUserPassword,
   findUserById,
   userAccountsExist,
+  createSession,
+  validateSession,
+  removeSession,
+  removeAllUserSessions,
+  cleanupExpiredSessions,
   type UserAccount 
 } from "@/lib/userStorage";
 
@@ -23,6 +28,7 @@ interface UserContextType {
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, name: string, password: string) => Promise<boolean>;
   logout: () => void;
+  logoutAllDevices: () => Promise<boolean>;
   updateProfile: (updates: { name?: string; profilePicture?: string }) => Promise<boolean>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   isLoading: boolean;
@@ -36,10 +42,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize user accounts and load from localStorage on mount
+  // Initialize user accounts and validate session on mount
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Clean up expired sessions
+        await cleanupExpiredSessions();
+
         // Check if user accounts exist, if not create default admin
         const accountsExist = await userAccountsExist();
         if (!accountsExist) {
@@ -47,16 +56,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
           // This would be handled by a migration script in production
         }
 
-        // Load user from localStorage
-        const storedUser = localStorage.getItem("bookit-user");
-        if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          // Verify user still exists in blob storage
-          const fullUser = await findUserById(userData.id);
-          if (fullUser && fullUser.isActive) {
-            setUser(userData);
+        // Load session from localStorage
+        const sessionToken = localStorage.getItem("bookit-session");
+        if (sessionToken) {
+          // Validate session and get user
+          const authenticatedUser = await validateSession(sessionToken);
+          if (authenticatedUser) {
+            const userForContext: User = {
+              id: authenticatedUser.id,
+              email: authenticatedUser.email,
+              name: authenticatedUser.name,
+              priorityScore: authenticatedUser.priorityScore,
+              createdAt: authenticatedUser.createdAt,
+            };
+            setUser(userForContext);
           } else {
-            localStorage.removeItem("bookit-user");
+            // Invalid session, remove it
+            localStorage.removeItem("bookit-session");
           }
         }
       } catch (err) {
@@ -77,6 +93,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       
       const authenticatedUser = await authenticateUser(email, password);
       if (authenticatedUser) {
+        // Create session for cross-device access
+        const session = await createSession(authenticatedUser.id, navigator.userAgent);
+        
         const userForContext: User = {
           id: authenticatedUser.id,
           email: authenticatedUser.email,
@@ -86,7 +105,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         };
         
         setUser(userForContext);
-        localStorage.setItem("bookit-user", JSON.stringify(userForContext));
+        localStorage.setItem("bookit-session", session.token);
         return true;
       }
       
@@ -106,6 +125,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       
       const newUser = await createUser({ email, name, password });
+      
+      // Create session for new user
+      const session = await createSession(newUser.id, navigator.userAgent);
+      
       const userForContext: User = {
         id: newUser.id,
         email: newUser.email,
@@ -115,7 +138,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       };
       
       setUser(userForContext);
-      localStorage.setItem("bookit-user", JSON.stringify(userForContext));
+      localStorage.setItem("bookit-session", session.token);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -143,7 +166,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
         };
         
         setUser(userForContext);
-        localStorage.setItem("bookit-user", JSON.stringify(userForContext));
         return true;
       }
       
@@ -178,10 +200,43 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setError(null);
-    localStorage.removeItem("bookit-user");
+  const logout = async () => {
+    try {
+      // Remove current session
+      const sessionToken = localStorage.getItem("bookit-session");
+      if (sessionToken) {
+        const session = await validateSession(sessionToken);
+        if (session) {
+          await removeSession(session.id);
+        }
+      }
+    } catch (err) {
+      console.error('Error removing session:', err);
+    } finally {
+      setUser(null);
+      setError(null);
+      localStorage.removeItem("bookit-session");
+    }
+  };
+
+  const logoutAllDevices = async (): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      setError(null);
+      const success = await removeAllUserSessions(user.id);
+      
+      if (success) {
+        setUser(null);
+        setError(null);
+        localStorage.removeItem("bookit-session");
+      }
+      
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to logout from all devices');
+      return false;
+    }
   };
 
   return (
@@ -190,6 +245,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       login, 
       register, 
       logout, 
+      logoutAllDevices,
       updateProfile,
       changePassword,
       isLoading, 
