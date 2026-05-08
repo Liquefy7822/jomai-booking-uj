@@ -5,6 +5,7 @@ export interface User {
   name: string;
   priorityScore: number;
   createdAt: string;
+  isAdmin?: boolean;
 }
 
 export interface Court {
