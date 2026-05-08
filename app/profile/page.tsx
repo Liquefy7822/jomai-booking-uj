@@ -7,6 +7,7 @@ import { useBooking } from "@/context/BookingContext";
 import { BookingCard } from "@/components/BookingCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Navbar } from "@/components/Navbar";
 import {
   User,
   Mail,
@@ -96,36 +97,33 @@ export default function ProfilePage() {
                     {/* Avatar */}
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <User className="h-7 w-7" />
-                      {/* Avatar */}
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <User className="h-7 w-7" />
-                      </div>
+                    </div>
 
-                      <div className="flex-1">
-                        <h2 className="text-lg font-semibold text-foreground">
-                          {user.name}
-                        </h2>
-                        <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <Mail className="h-3.5 w-3.5" />
-                          <span>{user.email}</span>
-                        </div>
-                        <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span>
-                            Member since{" "}
-                            {new Date(user.createdAt).toLocaleDateString("en-SG", {
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </span>
-                        </div>
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold text-foreground">
+                        {user.name}
+                      </h2>
+                      <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Mail className="h-3.5 w-3.5" />
+                        <span>{user.email}</span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>
+                          Member since{" "}
+                          {new Date(user.createdAt).toLocaleDateString("en-SG", {
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Priority Score Card */}
-                <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10">
+              <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>

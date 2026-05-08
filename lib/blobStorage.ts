@@ -1,9 +1,8 @@
-import { put, list, head, del } from "@vercel/blob";
+// Client-side compatible implementation using localStorage
+// Note: This uses localStorage for client-side compatibility
 
 // Blob storage configuration
-const BLOB_STORE_ID = process.env.NEXT_PUBLIC_BLOB_STORE_ID || 'store_1u04yEcpbxVg7hVe';
-const BLOB_REGION = process.env.NEXT_PUBLIC_BLOB_REGION || 'sin1';
-const BLOB_BASE_URL = process.env.NEXT_PUBLIC_BLOB_BASE_URL || 'https://1u04yecpbxvg7hve.private.blob.vercel-storage.com';
+const BLOB_BASE_URL = 'https://1u04yecpbxvg7hve.private.blob.vercel-storage.com';
 
 // Court data blob key
 const COURTS_BLOB_KEY = 'courts-data.json';
@@ -15,7 +14,7 @@ export interface CourtBlobData {
 }
 
 /**
- * Store court data in Vercel Blob storage
+ * Store court data in localStorage
  */
 export async function storeCourtData(courts: any[]): Promise<{ url: string }> {
   const data: CourtBlobData = {
@@ -24,68 +23,68 @@ export async function storeCourtData(courts: any[]): Promise<{ url: string }> {
     version: '1.0.0'
   };
 
-  const blob = await put(COURTS_BLOB_KEY, JSON.stringify(data, null, 2), {
-    access: 'private',
-    contentType: 'application/json',
-  });
-
-  return blob;
+  try {
+    localStorage.setItem(COURTS_BLOB_KEY, JSON.stringify(data));
+    return { url: `${BLOB_BASE_URL}/${COURTS_BLOB_KEY}` };
+  } catch (error) {
+    console.error('Error storing court data:', error);
+    throw error;
+  }
 }
 
 /**
- * Retrieve court data from Vercel Blob storage
+ * Retrieve court data from localStorage
  */
 export async function getCourtData(): Promise<CourtBlobData | null> {
   try {
-    const response = await fetch(`${BLOB_BASE_URL}/${COURTS_BLOB_KEY}`);
-    
-    if (!response.ok) {
-      console.log('No court data found in blob storage, using default data');
-      return null;
+    const stored = localStorage.getItem(COURTS_BLOB_KEY);
+    if (stored) {
+      const data = JSON.parse(stored);
+      return data;
     }
 
-    const data = await response.json();
-    return data;
+    console.log('No court data found in localStorage, using default data');
+    return null;
   } catch (error) {
-    console.error('Error fetching court data from blob storage:', error);
+    console.error('Error fetching court data:', error);
     return null;
   }
 }
 
 /**
- * Check if court data exists in blob storage
+ * Check if court data exists in localStorage
  */
 export async function courtDataExists(): Promise<boolean> {
   try {
-    const response = await head(COURTS_BLOB_KEY);
-    return !!response;
+    const stored = localStorage.getItem(COURTS_BLOB_KEY);
+    return !!stored;
   } catch (error) {
     return false;
   }
 }
 
 /**
- * Delete court data from blob storage
+ * Delete court data from localStorage
  */
-export async function deleteCourtData(): Promise<void> {
+export async function deleteCourtData(): Promise<boolean> {
   try {
-    await del(COURTS_BLOB_KEY);
-    console.log('Court data deleted from blob storage');
+    localStorage.removeItem(COURTS_BLOB_KEY);
+    return true;
   } catch (error) {
     console.error('Error deleting court data:', error);
-    throw error;
+    return false;
   }
 }
 
 /**
- * List all blobs in storage (for admin purposes)
+ * List all storage keys (client-side equivalent)
  */
-export async function listAllBlobs(): Promise<any[]> {
+export async function listBlobs(): Promise<string[]> {
   try {
-    const { blobs } = await list();
-    return blobs;
+    const keys = Object.keys(localStorage);
+    return keys.filter(key => key.includes('-data.json'));
   } catch (error) {
-    console.error('Error listing blobs:', error);
+    console.error('Error listing storage keys:', error);
     return [];
   }
 }
