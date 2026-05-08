@@ -12,7 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, Home, Users, User, LogOut, Calendar } from "lucide-react";
+import { Menu, Home, Users, User, LogOut, Calendar, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -26,6 +26,12 @@ export function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useUser();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Show admin navigation when on admin page
+  const isAdminPage = pathname.startsWith("/admin");
+  const adminNavItems = [
+    { href: "/admin", label: "Admin", icon: Settings },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -44,9 +50,9 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        {user && (
+        {(user || isAdminPage) && (
           <nav className="hidden items-center gap-1 md:flex">
-            {navItems.map((item) => {
+            {(isAdminPage ? adminNavItems : navItems).map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -65,20 +71,22 @@ export function Navbar() {
             })}
             <div className="ml-2 h-4 w-px bg-border" />
             <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={logout}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <LogOut className="mr-1.5 h-4 w-4" />
-              Sign Out
-            </Button>
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={logout}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="mr-1.5 h-4 w-4" />
+                Sign Out
+              </Button>
+            )}
           </nav>
         )}
 
         {/* Mobile Menu Button */}
-        {user && (
+        {(user || isAdminPage) && (
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon" className="-mr-2">
@@ -97,23 +105,25 @@ export function Navbar() {
               </SheetHeader>
 
               {/* User Info */}
-              <div className="mt-6 rounded-lg border border-border bg-muted/30 p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <User className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {user.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
+              {user && (
+                <div className="mt-6 rounded-lg border border-border bg-muted/30 p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <User className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Navigation Links */}
               <nav className="mt-6 flex flex-col gap-1">
-                {navItems.map((item) => {
+                {(isAdminPage ? adminNavItems : navItems).map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
                   return (
@@ -141,14 +151,16 @@ export function Navbar() {
                   <span className="text-sm text-muted-foreground">Theme</span>
                   <ThemeToggle />
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </Button>
+                {user && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </Button>
+                )}
               </div>
             </SheetContent>
           </Sheet>

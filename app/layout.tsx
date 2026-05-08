@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { UserProvider } from "@/context/UserContext";
 import { BookingProvider } from "@/context/BookingContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AdminProvider } from "@/context/AdminContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -59,9 +60,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <ThemeProvider>
-          <UserProvider>
-            <BookingProvider>{children}</BookingProvider>
-          </UserProvider>
+          <AdminProvider>
+            <UserProvider>
+              <BookingProvider>{children}</BookingProvider>
+            </UserProvider>
+          </AdminProvider>
         </ThemeProvider>
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
