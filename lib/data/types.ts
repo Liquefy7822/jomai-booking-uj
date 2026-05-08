@@ -6,6 +6,7 @@ export interface User {
   name: string;
   priorityScore: number;
   createdAt: string;
+  profilePicture?: string;
 }
 
 export interface Court {

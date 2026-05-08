@@ -24,7 +24,10 @@ export async function storeCourtData(courts: any[]): Promise<{ url: string }> {
   };
 
   try {
-    localStorage.setItem(COURTS_BLOB_KEY, JSON.stringify(data));
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem(COURTS_BLOB_KEY, JSON.stringify(data));
+    }
     return { url: `${BLOB_BASE_URL}/${COURTS_BLOB_KEY}` };
   } catch (error) {
     console.error('Error storing court data:', error);
@@ -37,10 +40,13 @@ export async function storeCourtData(courts: any[]): Promise<{ url: string }> {
  */
 export async function getCourtData(): Promise<CourtBlobData | null> {
   try {
-    const stored = localStorage.getItem(COURTS_BLOB_KEY);
-    if (stored) {
-      const data = JSON.parse(stored);
-      return data;
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const stored = localStorage.getItem(COURTS_BLOB_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        return data;
+      }
     }
 
     console.log('No court data found in localStorage, using default data');
@@ -56,8 +62,12 @@ export async function getCourtData(): Promise<CourtBlobData | null> {
  */
 export async function courtDataExists(): Promise<boolean> {
   try {
-    const stored = localStorage.getItem(COURTS_BLOB_KEY);
-    return !!stored;
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const stored = localStorage.getItem(COURTS_BLOB_KEY);
+      return !!stored;
+    }
+    return false;
   } catch (error) {
     return false;
   }
@@ -68,7 +78,10 @@ export async function courtDataExists(): Promise<boolean> {
  */
 export async function deleteCourtData(): Promise<boolean> {
   try {
-    localStorage.removeItem(COURTS_BLOB_KEY);
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem(COURTS_BLOB_KEY);
+    }
     return true;
   } catch (error) {
     console.error('Error deleting court data:', error);
@@ -81,8 +94,12 @@ export async function deleteCourtData(): Promise<boolean> {
  */
 export async function listBlobs(): Promise<string[]> {
   try {
-    const keys = Object.keys(localStorage);
-    return keys.filter(key => key.includes('-data.json'));
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const keys = Object.keys(localStorage);
+      return keys.filter(key => key.includes('-data.json'));
+    }
+    return [];
   } catch (error) {
     console.error('Error listing storage keys:', error);
     return [];

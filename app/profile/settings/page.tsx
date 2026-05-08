@@ -129,7 +129,7 @@ export default function ProfileSettingsPage() {
     );
   }
 
-  const priorityTier = getPriorityTier(user.priorityScore);
+  const priorityTier = getPriorityTier(user?.priorityScore || 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -243,7 +243,7 @@ export default function ProfileSettingsPage() {
             {/* Picture Tab */}
             <TabsContent value="picture" className="space-y-6">
               <ProfilePictureUpload
-                currentPicture={user.profilePicture}
+                currentPicture={user?.profilePicture}
                 onPictureChange={handleProfilePictureChange}
                 maxSize={5}
               />
@@ -330,7 +330,7 @@ export default function ProfileSettingsPage() {
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium">Account ID:</span>
                   </div>
-                  <p className="text-sm font-mono bg-muted px-2 py-1 rounded">{user.id}</p>
+                  <p className="text-sm font-mono bg-muted px-2 py-1 rounded">{user?.id}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -339,7 +339,7 @@ export default function ProfileSettingsPage() {
                     <span className="font-medium">Member Since:</span>
                   </div>
                   <p className="text-sm">
-                    {new Date(user.createdAt).toLocaleDateString("en-SG", {
+                    {user && new Date(user.createdAt).toLocaleDateString("en-SG", {
                       year: "numeric",
                       month: "long",
                       day: "numeric"
@@ -355,7 +355,7 @@ export default function ProfileSettingsPage() {
                     <span className="font-medium">Priority Score:</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold">{user.priorityScore}</span>
+                    <span className="text-2xl font-bold">{user?.priorityScore || 0}</span>
                     <span className="text-lg text-muted-foreground">/100</span>
                   </div>
                   <p className={`text-sm font-semibold ${priorityTier.color}`}>
@@ -368,7 +368,7 @@ export default function ProfileSettingsPage() {
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium">Email:</span>
                   </div>
-                  <p className="text-sm">{user.email}</p>
+                  <p className="text-sm">{user?.email}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -376,7 +376,7 @@ export default function ProfileSettingsPage() {
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium">Name:</span>
                   </div>
-                  <p className="text-sm">{user.name}</p>
+                  <p className="text-sm">{user?.name}</p>
                 </div>
               </div>
             </CardContent>

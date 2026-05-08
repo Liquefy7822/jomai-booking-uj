@@ -68,6 +68,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
               name: authenticatedUser.name,
               priorityScore: authenticatedUser.priorityScore,
               createdAt: authenticatedUser.createdAt,
+              profilePicture: authenticatedUser.profilePicture,
             };
             setUser(userForContext);
           } else {
@@ -102,6 +103,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           name: authenticatedUser.name,
           priorityScore: authenticatedUser.priorityScore,
           createdAt: authenticatedUser.createdAt,
+          profilePicture: authenticatedUser.profilePicture,
         };
         
         setUser(userForContext);
@@ -135,6 +137,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         name: newUser.name,
         priorityScore: newUser.priorityScore,
         createdAt: newUser.createdAt,
+        profilePicture: newUser.profilePicture,
       };
       
       setUser(userForContext);
@@ -163,6 +166,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           name: updatedUser.name,
           priorityScore: updatedUser.priorityScore,
           createdAt: updatedUser.createdAt,
+          profilePicture: updatedUser.profilePicture,
         };
         
         setUser(userForContext);
