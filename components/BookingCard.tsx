@@ -5,7 +5,7 @@ import { formatDate, formatTime, getCourtById } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, Users } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Bluetooth, CheckCircle } from "lucide-react";
 
 interface BookingCardProps {
   booking: Booking;
@@ -33,12 +33,20 @@ export function BookingCard({ booking, onCancel, isPast: isPastProp }: BookingCa
               </div>
             )}
           </div>
-          {booking.openToSharing && (
-            <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
-              <Users className="mr-1 h-3 w-3" />
-              Open
-            </Badge>
-          )}
+          <div className="flex gap-2">
+            {booking.checkedIn && (
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <CheckCircle className="mr-1 h-3 w-3" />
+                Checked In
+              </Badge>
+            )}
+            {booking.openToSharing && (
+              <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
+                <Users className="mr-1 h-3 w-3" />
+                Open
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* Details */}

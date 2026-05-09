@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { useBooking } from "@/context/BookingContext";
 import { BookingCard } from "@/components/BookingCard";
+import { BluetoothCheckIn } from "@/components/BluetoothCheckIn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
@@ -17,11 +18,14 @@ import {
   Settings,
 } from "lucide-react";
 import Link from "next/link";
+import type { Booking } from "@/lib/data";
+import { getCourtById } from "@/lib/data";
 
 export default function ProfilePage() {
   const { user, isLoading: userLoading } = useUser();
   const { bookings, cancelBooking } = useBooking();
   const router = useRouter();
+  const [userBookings, setUserBookings] = useState<Booking[]>([]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -29,6 +33,27 @@ export default function ProfilePage() {
       router.push("/");
     }
   }, [user, userLoading, router]);
+
+  // Update bookings when they change
+  useEffect(() => {
+    const filteredBookings = bookings
+      .filter((b) => b.userId === user?.id)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    setUserBookings(filteredBookings);
+  }, [bookings, user]);
+
+  const handleCheckIn = (bookingId: string, success: boolean) => {
+    if (success) {
+      // Update the booking to show as checked in
+      setUserBookings(prev => 
+        prev.map(booking => 
+          booking.id === bookingId 
+            ? { ...booking, checkedIn: true, checkInTime: new Date().toISOString() }
+            : booking
+        )
+      );
+    }
+  };
 
   if (userLoading || !user) {
     return (
@@ -38,10 +63,6 @@ export default function ProfilePage() {
     );
   }
 
-  // TODO: Replace with API call to fetch user's bookings
-  const userBookings = bookings
-    .filter((b) => b.userId === user.id)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const upcomingBookings = userBookings.filter(
     (b) => new Date(b.date) >= new Date(new Date().toDateString())
@@ -205,19 +226,52 @@ export default function ProfilePage() {
                       </CardContent>
                     </Card>
                   ) : (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {upcomingBookings.map((booking) => (
-                        <BookingCard
-                          key={booking.id}
-                          booking={booking}
-                          onCancel={() => {
-                            // TODO: Replace with API call to cancel booking
-                            if (confirm("Are you sure you want to cancel this booking?")) {
-                              cancelBooking(booking.id);
-                            }
-                          }}
-                        />
-                      ))}
+                    <div className="space-y-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {upcomingBookings.map((booking) => (
+                          <BookingCard
+                            key={booking.id}
+                            booking={booking}
+                            onCancel={() => {
+                              // TODO: Replace with API call to cancel booking
+                              if (confirm("Are you sure you want to cancel this booking?")) {
+                                cancelBooking(booking.id);
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                      
+                      {/* Bluetooth Check-in Section */}
+                      <div className="mt-6">
+                        <h3 className="mb-3 font-semibold text-foreground">
+                          Court Check-In
+                        </h3>
+                        <div className="space-y-3">
+                          {upcomingBookings
+                            .filter(booking => !booking.checkedIn)
+                            .map((booking) => {
+                              const court = getCourtById(booking.courtId);
+                              return (
+                                <BluetoothCheckIn
+                                  key={booking.id}
+                                  courtName={court?.name || "Unknown Court"}
+                                  bookingId={booking.id}
+                                  onCheckInComplete={(success) => handleCheckIn(booking.id, success)}
+                                />
+                              );
+                            })}
+                          {upcomingBookings.every(booking => booking.checkedIn) && (
+                            <Card>
+                              <CardContent className="p-4 text-center">
+                                <p className="text-sm text-muted-foreground">
+                                  All upcoming bookings have been checked in.
+                                </p>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

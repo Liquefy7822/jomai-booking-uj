@@ -41,6 +41,8 @@ export interface Booking {
   endTime: string;
   openToSharing: boolean;
   createdAt: string;
+  checkedIn?: boolean;
+  checkInTime?: string;
 }
 
 export interface MatchmakingPost {
