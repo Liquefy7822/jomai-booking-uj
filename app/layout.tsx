@@ -5,6 +5,7 @@ import { UserProvider } from "@/context/UserContext";
 import { BookingProvider } from "@/context/BookingContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AdminProvider } from "@/context/AdminContext";
+import { AiChatWidget } from "@/components/AiChatWidget";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -62,7 +63,10 @@ export default function RootLayout({
         <ThemeProvider>
           <AdminProvider>
             <UserProvider>
-              <BookingProvider>{children}</BookingProvider>
+              <BookingProvider>
+                {children}
+                <AiChatWidget />
+              </BookingProvider>
             </UserProvider>
           </AdminProvider>
         </ThemeProvider>
