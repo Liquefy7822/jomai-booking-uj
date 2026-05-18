@@ -1,5 +1,13 @@
 // Types for the booking system
 
+import type { PreferredSchedule } from "./singpassPersonas";
+
+export interface UserBookingPreferences {
+  preferredSchedule: PreferredSchedule;
+  maxPricePerHour: number;
+  scheduleLabel: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -7,6 +15,8 @@ export interface User {
   priorityScore: number;
   createdAt: string;
   profilePicture?: string;
+  nric?: string;
+  bookingPreferences?: UserBookingPreferences;
 }
 
 export interface Court {

@@ -8,12 +8,13 @@ import {
   ReactNode,
 } from "react";
 import type { User } from "@/lib/data/types";
+import { getSingpassPersona } from "@/lib/data/singpassPersonas";
 import { 
   authenticateUser, 
+  authenticateSingpassUser,
   createUser, 
   updateUserProfile, 
   changeUserPassword,
-  findUserById,
   userAccountsExist,
   createSession,
   validateSession,
@@ -25,6 +26,7 @@ import {
 
 interface UserContextType {
   user: User | null;
+  loginWithSingpass: (personaId: string) => Promise<boolean>;
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, name: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -62,6 +64,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
           // Validate session and get user
           const authenticatedUser = await validateSession(sessionToken);
           if (authenticatedUser) {
+            const prefsRaw = localStorage.getItem(
+              `bookit-prefs-${authenticatedUser.id}`,
+            );
             const userForContext: User = {
               id: authenticatedUser.id,
               email: authenticatedUser.email,
@@ -69,6 +74,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
               priorityScore: authenticatedUser.priorityScore,
               createdAt: authenticatedUser.createdAt,
               profilePicture: authenticatedUser.profilePicture,
+              bookingPreferences: prefsRaw
+                ? JSON.parse(prefsRaw)
+                : undefined,
             };
             setUser(userForContext);
           } else {
@@ -86,6 +94,60 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     initializeApp();
   }, []);
+
+  const loginWithSingpass = async (personaId: string): Promise<boolean> => {
+    try {
+      setError(null);
+      setIsLoading(true);
+
+      const persona = getSingpassPersona(personaId);
+      if (!persona) {
+        setError("Invalid demo profile");
+        return false;
+      }
+
+      const authenticatedUser = await authenticateSingpassUser(
+        persona.nric,
+        persona.name,
+      );
+
+      const session = await createSession(
+        authenticatedUser.id,
+        navigator.userAgent,
+      );
+
+      const bookingPreferences = {
+        preferredSchedule: persona.preferredSchedule,
+        maxPricePerHour: persona.maxPricePerHour,
+        scheduleLabel: persona.scheduleLabel,
+      };
+
+      localStorage.setItem(
+        `bookit-prefs-${authenticatedUser.id}`,
+        JSON.stringify(bookingPreferences),
+      );
+
+      const userForContext: User = {
+        id: authenticatedUser.id,
+        email: authenticatedUser.email,
+        name: authenticatedUser.name,
+        priorityScore: authenticatedUser.priorityScore,
+        createdAt: authenticatedUser.createdAt,
+        profilePicture: authenticatedUser.profilePicture,
+        nric: persona.nric,
+        bookingPreferences,
+      };
+
+      setUser(userForContext);
+      localStorage.setItem("bookit-session", session.token);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Singpass login failed");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -246,6 +308,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   return (
     <UserContext.Provider value={{ 
       user, 
+      loginWithSingpass,
       login, 
       register, 
       logout, 

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { LoginForm } from "@/components/LoginForm";
+import { SingpassLogin } from "@/components/SingpassLogin";
 import { Navbar } from "@/components/Navbar";
 import { Calendar, Users, MapPin, Clock } from "lucide-react";
 
@@ -72,7 +72,7 @@ export default function LandingPage() {
 
               {/* Right: Login Form */}
               <div className="flex justify-center md:justify-end">
-                <LoginForm />
+                <SingpassLogin />
               </div>
             </div>
           </div>
@@ -87,8 +87,8 @@ export default function LandingPage() {
             <div className="mt-8 grid gap-6 md:grid-cols-3">
               <StepCard
                 step={1}
-                title="Sign In"
-                description="Enter your email and name to access the booking system"
+                title="Sign in with Singpass"
+                description="Use your Singpass demo profile to access the booking system"
               />
               <StepCard
                 step={2}

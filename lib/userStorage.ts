@@ -160,6 +160,35 @@ export async function createUser(userData: {
 }
 
 /**
+ * Sign in or register via mock Singpass (email derived from NRIC).
+ */
+export async function authenticateSingpassUser(
+  nric: string,
+  name: string,
+): Promise<UserAccount> {
+  const email = `${nric.toLowerCase()}@singpass.bookit`;
+  let user = await findUserByEmail(email);
+
+  if (!user) {
+    user = await createUser({
+      email,
+      name,
+      password: nric,
+    });
+  }
+
+  const users = await getUserAccounts();
+  const userIndex = users.findIndex((u) => u.id === user!.id);
+  if (userIndex !== -1) {
+    users[userIndex].lastLogin = new Date().toISOString();
+    await storeUserAccounts(users);
+    user = users[userIndex];
+  }
+
+  return user!;
+}
+
+/**
  * Authenticate user
  */
 export async function authenticateUser(email: string, password: string): Promise<UserAccount | null> {

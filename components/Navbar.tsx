@@ -115,7 +115,9 @@ export function Navbar() {
                       <p className="text-sm font-medium text-foreground">
                         {user.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.nric ?? user.email}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -169,7 +171,7 @@ export function Navbar() {
         {/* Login Button for non-authenticated users */}
         {!user && pathname !== "/" && (
           <Link href="/">
-            <Button size="sm">Sign In</Button>
+            <Button size="sm">Singpass Login</Button>
           </Link>
         )}
       </div>

@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, User, Mail, Save, X } from "lucide-react";
 
 export function EditProfileForm({ onCancel }: { onCancel: () => void }) {
-  const { user, login } = useUser();
+  const { user, updateProfile } = useUser();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -37,12 +37,6 @@ export function EditProfileForm({ onCancel }: { onCancel: () => void }) {
       newErrors.name = "Name must be at least 2 characters";
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -56,21 +50,11 @@ export function EditProfileForm({ onCancel }: { onCancel: () => void }) {
     setErrors({});
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update user profile (in real app, this would call an API)
-      if (user) {
-        const updatedUser = {
-          ...user,
-          name: formData.name,
-          email: formData.email,
-        };
-        
-        // Update localStorage and context
-        localStorage.setItem("bookit-user", JSON.stringify(updatedUser));
-        login(formData.email, formData.name);
+      const ok = await updateProfile({ name: formData.name.trim() });
+      if (ok) {
         setSuccess(true);
+      } else {
+        setErrors({ submit: "Profile update failed. Please try again." });
       }
     } catch (error) {
       setErrors({ submit: "Profile update failed. Please try again." });
@@ -165,7 +149,8 @@ export function EditProfileForm({ onCancel }: { onCancel: () => void }) {
                 value={formData.email}
                 onChange={handleChange("email")}
                 className="pl-10"
-                disabled={isLoading}
+                disabled={isLoading || Boolean(user?.email.endsWith("@singpass.bookit"))}
+                readOnly={Boolean(user?.email.endsWith("@singpass.bookit"))}
               />
             </div>
             {errors.email && (
