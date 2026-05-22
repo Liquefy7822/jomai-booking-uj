@@ -7,7 +7,8 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import type { User } from "@/lib/data/types";
+import type { User, UserBookingPreferences } from "@/lib/data/types";
+import type { UserRole } from "@/lib/data/ballotTypes";
 import { getSingpassPersona } from "@/lib/data/singpassPersonas";
 import { 
   authenticateUser, 
@@ -67,6 +68,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
             const prefsRaw = localStorage.getItem(
               `bookit-prefs-${authenticatedUser.id}`,
             );
+            const prefs = prefsRaw
+              ? (JSON.parse(prefsRaw) as {
+                  role?: UserRole;
+                } & Partial<UserBookingPreferences>)
+              : null;
             const userForContext: User = {
               id: authenticatedUser.id,
               email: authenticatedUser.email,
@@ -74,9 +80,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
               priorityScore: authenticatedUser.priorityScore,
               createdAt: authenticatedUser.createdAt,
               profilePicture: authenticatedUser.profilePicture,
-              bookingPreferences: prefsRaw
-                ? JSON.parse(prefsRaw)
-                : undefined,
+              role: prefs?.role,
+              bookingPreferences:
+                prefs?.preferredSchedule != null &&
+                prefs.maxPricePerHour != null &&
+                prefs.scheduleLabel
+                  ? {
+                      preferredSchedule: prefs.preferredSchedule,
+                      maxPricePerHour: prefs.maxPricePerHour,
+                      scheduleLabel: prefs.scheduleLabel,
+                    }
+                  : undefined,
             };
             setUser(userForContext);
           } else {
@@ -124,7 +138,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       localStorage.setItem(
         `bookit-prefs-${authenticatedUser.id}`,
-        JSON.stringify(bookingPreferences),
+        JSON.stringify({ ...bookingPreferences, role: persona.role }),
       );
 
       const userForContext: User = {
@@ -135,6 +149,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         createdAt: authenticatedUser.createdAt,
         profilePicture: authenticatedUser.profilePicture,
         nric: persona.nric,
+        role: persona.role,
         bookingPreferences,
       };
 

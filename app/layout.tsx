@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { UserProvider } from "@/context/UserContext";
 import { BookingProvider } from "@/context/BookingContext";
+import { BallotProvider } from "@/context/BallotContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AdminProvider } from "@/context/AdminContext";
 import { AiChatWidget } from "@/components/AiChatWidget";
@@ -64,8 +65,10 @@ export default function RootLayout({
           <AdminProvider>
             <UserProvider>
               <BookingProvider>
-                {children}
-                <AiChatWidget />
+                <BallotProvider>
+                  {children}
+                  <AiChatWidget />
+                </BallotProvider>
               </BookingProvider>
             </UserProvider>
           </AdminProvider>

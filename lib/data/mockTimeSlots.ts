@@ -38,8 +38,33 @@ const generateTimeSlots = (): TimeSlot[] => {
 
 export const timeSlots: TimeSlot[] = generateTimeSlots();
 
+function buildSlotsForDate(courtId: string, dateStr: string): TimeSlot[] {
+  const court = courts.find((c) => c.id === courtId);
+  if (!court) return [];
+
+  const slots: TimeSlot[] = [];
+  for (let hour = 8; hour < 22; hour++) {
+    const startTime = `${hour.toString().padStart(2, "0")}:00`;
+    const endTime = `${(hour + 1).toString().padStart(2, "0")}:00`;
+    const seed = dateStr.charCodeAt(0) + hour;
+    slots.push({
+      id: `slot-${courtId}-${dateStr}-${hour}`,
+      courtId,
+      date: dateStr,
+      startTime,
+      endTime,
+      isAvailable: seed % 3 !== 0,
+      price: court.pricePerHour,
+    });
+  }
+  return slots;
+}
+
 export const getSlotsByCourtAndDate = (
   courtId: string,
-  date: string
-): TimeSlot[] =>
-  timeSlots.filter((s) => s.courtId === courtId && s.date === date);
+  date: string,
+): TimeSlot[] => {
+  const cached = timeSlots.filter((s) => s.courtId === courtId && s.date === date);
+  if (cached.length > 0) return cached;
+  return buildSlotsForDate(courtId, date);
+};

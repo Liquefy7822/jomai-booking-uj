@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { useBooking } from "@/context/BookingContext";
+import { useBallot } from "@/context/BallotContext";
 import { BookingCard } from "@/components/BookingCard";
 import { BluetoothCheckIn } from "@/components/BluetoothCheckIn";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import { getCourtById } from "@/lib/data";
 export default function ProfilePage() {
   const { user, isLoading: userLoading } = useUser();
   const { bookings, cancelBooking } = useBooking();
+  const { cancelBookingWithPolicy } = useBallot();
   const router = useRouter();
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
 
@@ -233,8 +235,22 @@ export default function ProfilePage() {
                             key={booking.id}
                             booking={booking}
                             onCancel={() => {
-                              // TODO: Replace with API call to cancel booking
-                              if (confirm("Are you sure you want to cancel this booking?")) {
+                              const result = cancelBookingWithPolicy(
+                                { ...booking, amountPaid: 8 },
+                                user,
+                              );
+                              const msg = [
+                                result.message,
+                                result.fee > 0
+                                  ? `Fee: $${result.fee.toFixed(2)}`
+                                  : null,
+                                result.nextInLine
+                                  ? `Offered to: ${result.nextInLine}`
+                                  : null,
+                              ]
+                                .filter(Boolean)
+                                .join("\n");
+                              if (confirm(`Cancel this booking?\n\n${msg}`)) {
                                 cancelBooking(booking.id);
                               }
                             }}

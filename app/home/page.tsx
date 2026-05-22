@@ -7,7 +7,10 @@ import { courts } from "@/lib/mockData";
 import { CourtCard } from "@/components/CourtCard";
 import { Navbar } from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import Link from "next/link";
+import { Search, Scale, ArrowRight } from "lucide-react";
+import { BallotTransparencyPanel } from "@/components/BallotTransparencyPanel";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const { user, isLoading } = useUser();
@@ -69,6 +72,23 @@ export default function HomePage() {
         </div>
       </div>
 
+      <div className="border-b border-border bg-primary/5 px-4 py-4">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Scale className="size-4 text-primary" />
+            <span className="text-foreground">
+              Courts are allocated by weekly ballot — not first-come-first-served.
+            </span>
+          </div>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/ballot">
+              View transparency panel
+              <ArrowRight className="ml-1 size-4" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+
       {/* Courts List */}
       <div className="px-4 py-6">
         <div className="mx-auto max-w-5xl">
@@ -93,6 +113,11 @@ export default function HomePage() {
               ))}
             </div>
           )}
+
+          <div className="mt-10">
+            <h2 className="mb-4 font-medium text-foreground">Ballot transparency</h2>
+            <BallotTransparencyPanel compact />
+          </div>
         </div>
       </div>
     </div>

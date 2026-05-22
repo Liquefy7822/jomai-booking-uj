@@ -1,6 +1,7 @@
 // Types for the booking system
 
 import type { PreferredSchedule } from "./singpassPersonas";
+import type { UserRole } from "./ballotTypes";
 
 export interface UserBookingPreferences {
   preferredSchedule: PreferredSchedule;
@@ -17,6 +18,7 @@ export interface User {
   profilePicture?: string;
   nric?: string;
   bookingPreferences?: UserBookingPreferences;
+  role?: UserRole;
 }
 
 export interface Court {
@@ -53,6 +55,9 @@ export interface Booking {
   createdAt: string;
   checkedIn?: boolean;
   checkInTime?: string;
+  amountPaid?: number;
+  ballotEntryId?: string;
+  status?: "confirmed" | "ballot_pending" | "ballot_won" | "cancelled";
 }
 
 export interface MatchmakingPost {

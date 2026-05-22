@@ -12,12 +12,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, Home, Users, User, LogOut, Calendar, Settings } from "lucide-react";
+import { Menu, Home, Users, User, LogOut, Calendar, Settings, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navItems = [
   { href: "/home", label: "Courts", icon: Home },
+  { href: "/ballot", label: "Ballot", icon: Scale },
   { href: "/matchmaking", label: "Find Players", icon: Users },
   { href: "/profile", label: "Profile", icon: User },
 ];

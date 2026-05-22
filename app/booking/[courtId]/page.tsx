@@ -4,6 +4,9 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { useBooking } from "@/context/BookingContext";
+import { useBallot } from "@/context/BallotContext";
+import { getTargetBallotWeek } from "@/lib/ballotLogic";
+import type { UserRole } from "@/lib/data/ballotTypes";
 import {
   getCourtById,
   getSlotsByCourtAndDate,
@@ -28,12 +31,13 @@ export default function BookingPage({
 }) {
   const { courtId } = use(params);
   const { user, isLoading: userLoading } = useUser();
-  const { bookings, addBooking } = useBooking();
+  const { bookings } = useBooking();
+  const { submitBallotEntry, currentWeek, votingOpen } = useBallot();
   const router = useRouter();
 
-  // Generate available dates (next 7 days)
+  const ballotWeek = getTargetBallotWeek();
   const availableDates = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
+    const date = new Date(ballotWeek.weekStart);
     date.setDate(date.getDate() + i);
     return date.toISOString().split("T")[0];
   });
@@ -41,8 +45,10 @@ export default function BookingPage({
   const [selectedDate, setSelectedDate] = useState(availableDates[0]);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [openToSharing, setOpenToSharing] = useState(false);
+  const [useOverride, setUseOverride] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [ballotError, setBallotError] = useState<string | null>(null);
 
   // TODO: Replace with API call to fetch court details
   const court = getCourtById(courtId);
@@ -100,29 +106,34 @@ export default function BookingPage({
     if (!selectedSlot || !user) return;
 
     setIsBooking(true);
+    setBallotError(null);
 
-    // TODO: Replace with real API call to create booking
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
-    addBooking({
+    const role: UserRole = user.role ?? "resident";
+    const slotForBallot = { ...selectedSlot, date: selectedDate };
+
+    const result = submitBallotEntry({
+      user,
+      role,
+      slot: slotForBallot,
       courtId: court.id,
-      slotId: selectedSlot.id,
-      userId: user.id,
-      userName: user.name,
-      date: selectedDate,
-      startTime: selectedSlot.startTime,
-      endTime: selectedSlot.endTime,
       openToSharing,
+      useMonthlyOverride: useOverride && role === "elderly",
+      bookings,
     });
 
     setIsBooking(false);
-    setBookingSuccess(true);
 
-    // Redirect to profile after a short delay
+    if (!result.success) {
+      setBallotError(result.error ?? "Could not submit ballot application.");
+      return;
+    }
+
+    setBookingSuccess(true);
     setTimeout(() => {
-      router.push("/profile");
-    }, 1500);
+      router.push("/ballot");
+    }, 2000);
   };
 
   if (bookingSuccess) {
@@ -135,19 +146,14 @@ export default function BookingPage({
               <Check className="h-8 w-8 text-emerald-600" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
-              Booking Confirmed!
+              Ballot application submitted
             </h2>
             <p className="mt-2 text-muted-foreground">
-              {court.name} has been booked for{" "}
-              {selectedSlot && formatTime(selectedSlot.startTime)} on{" "}
-              {new Date(selectedDate).toLocaleDateString("en-SG", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
+              Your request for {court.name} is in this week&apos;s ballot queue.
+              Results are allocated by fairness score after voting closes Sunday.
             </p>
             <p className="mt-4 text-sm text-muted-foreground">
-              Redirecting to your profile...
+              Redirecting to the transparency panel…
             </p>
           </div>
         </div>
@@ -220,10 +226,9 @@ export default function BookingPage({
                 </CardContent>
               </Card>
 
-              {/* Open to Sharing Toggle */}
               {selectedSlot && (
                 <Card>
-                  <CardContent className="p-4">
+                  <CardContent className="space-y-4 p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-start gap-3">
                         <Users className="mt-0.5 h-5 w-5 text-primary" />
@@ -235,7 +240,7 @@ export default function BookingPage({
                             Open to sharing this slot
                           </Label>
                           <p className="text-xs text-muted-foreground">
-                            Allow others to find and join your game
+                            Matching a new partner may help elderly ballot override
                           </p>
                         </div>
                       </div>
@@ -245,6 +250,23 @@ export default function BookingPage({
                         onCheckedChange={setOpenToSharing}
                       />
                     </div>
+                    {user.role === "elderly" && (
+                      <div className="flex items-center justify-between border-t pt-3">
+                        <div>
+                          <Label htmlFor="override" className="text-sm font-medium">
+                            Monthly ballot override
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            One-time boost when playing with a new partner
+                          </p>
+                        </div>
+                        <Switch
+                          id="override"
+                          checked={useOverride}
+                          onCheckedChange={setUseOverride}
+                        />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -311,19 +333,26 @@ export default function BookingPage({
                       )}
                     </div>
 
+                    {ballotError && (
+                      <p className="mt-3 text-sm text-destructive">{ballotError}</p>
+                    )}
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Week {currentWeek.weekStart} – {currentWeek.weekEnd}. Voting{" "}
+                      {votingOpen ? "open until Sunday" : "closed"}.
+                    </p>
                     <Button
                       className="mt-4 w-full"
                       size="lg"
-                      disabled={isBooking}
+                      disabled={isBooking || !votingOpen}
                       onClick={handleBooking}
                     >
                       {isBooking ? (
                         <>
                           <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                          Booking...
+                          Submitting…
                         </>
                       ) : (
-                        `Confirm Booking - $${selectedSlot.price}.00`
+                        `Apply via ballot — $${selectedSlot.price}.00`
                       )}
                     </Button>
                   </CardContent>
