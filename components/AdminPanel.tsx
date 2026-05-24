@@ -12,13 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Settings, 
-  Users, 
-  Calendar, 
-  DollarSign, 
-  TrendingUp, 
-  LogOut, 
+import {
+  Settings,
+  Users,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  LogOut,
   Edit,
   Save,
   X,
@@ -26,11 +26,15 @@ import {
   Activity,
   Clock,
   MapPin,
-  Plus
+  Plus,
+  History,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { courts, users, initialBookings, initialMatchmakingPosts } from "@/lib/mockData";
 import type { Booking, User, MatchmakingPost, Court } from "@/lib/mockData";
 import { BallotTransparencyPanel } from "@/components/BallotTransparencyPanel";
+import type { CreditScoreHistory } from "@/lib/data/types";
 
 export function AdminPanel() {
   const { admin, logout } = useAdmin();
@@ -39,6 +43,7 @@ export function AdminPanel() {
   const [courtsList, setCourtsList] = useState<Court[]>(courts);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [viewingScoreHistory, setViewingScoreHistory] = useState<User | null>(null);
   const [editingCourt, setEditingCourt] = useState<Court | null>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -378,63 +383,111 @@ export function AdminPanel() {
                         </TableCell>
                         <TableCell>{user.createdAt}</TableCell>
                         <TableCell>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="outline" onClick={() => setEditingUser(user)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Edit User</DialogTitle>
-                                <DialogDescription>
-                                  Modify user details for {user.name}
-                                </DialogDescription>
-                              </DialogHeader>
-                              {editingUser && (
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label htmlFor="edit-user-name">Name</Label>
-                                    <Input
-                                      id="edit-user-name"
-                                      value={editingUser.name}
-                                      onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                                    />
+                          <div className="flex space-x-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="outline" onClick={() => setViewingScoreHistory(user)}>
+                                  <History className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center gap-2">
+                                    <History className="h-5 w-5" />
+                                    Credit Score History - {viewingScoreHistory?.name}
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Track how the priority score has changed over time
+                                  </DialogDescription>
+                                </DialogHeader>
+                                {viewingScoreHistory?.creditScoreHistory && (
+                                  <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                      <span className="text-sm font-medium">Current Score</span>
+                                      <span className="text-2xl font-bold text-primary">{viewingScoreHistory.priorityScore}</span>
+                                    </div>
+                                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                                      {viewingScoreHistory.creditScoreHistory.map((entry, index) => (
+                                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                                          <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-sm font-medium">{entry.score}</span>
+                                              {entry.change !== 0 && (
+                                                <Badge variant={entry.change > 0 ? "default" : "destructive"} className="text-xs">
+                                                  {entry.change > 0 ? "+" : ""}{entry.change}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1">{entry.reason}</p>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className="text-xs text-muted-foreground">{entry.date}</p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
-                                  <div>
-                                    <Label htmlFor="edit-user-email">Email</Label>
-                                    <Input
-                                      id="edit-user-email"
-                                      type="email"
-                                      value={editingUser.email}
-                                      onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                                    />
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="outline" onClick={() => setEditingUser(user)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Edit User</DialogTitle>
+                                  <DialogDescription>
+                                    Modify user details for {user.name}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                {editingUser && (
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label htmlFor="edit-user-name">Name</Label>
+                                      <Input
+                                        id="edit-user-name"
+                                        value={editingUser.name}
+                                        onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="edit-user-email">Email</Label>
+                                      <Input
+                                        id="edit-user-email"
+                                        type="email"
+                                        value={editingUser.email}
+                                        onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="edit-user-priority">Priority Score</Label>
+                                      <Input
+                                        id="edit-user-priority"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        value={editingUser.priorityScore}
+                                        onChange={(e) => setEditingUser({...editingUser, priorityScore: parseInt(e.target.value)})}
+                                      />
+                                    </div>
+                                    <div className="flex justify-end space-x-2">
+                                      <Button variant="outline" onClick={() => setEditingUser(null)}>
+                                        <X className="h-4 w-4 mr-2" />
+                                        Cancel
+                                      </Button>
+                                      <Button onClick={() => updateUser(editingUser)}>
+                                        <Save className="h-4 w-4 mr-2" />
+                                        Save Changes
+                                      </Button>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <Label htmlFor="edit-user-priority">Priority Score</Label>
-                                    <Input
-                                      id="edit-user-priority"
-                                      type="number"
-                                      min="0"
-                                      max="100"
-                                      value={editingUser.priorityScore}
-                                      onChange={(e) => setEditingUser({...editingUser, priorityScore: parseInt(e.target.value)})}
-                                    />
-                                  </div>
-                                  <div className="flex justify-end space-x-2">
-                                    <Button variant="outline" onClick={() => setEditingUser(null)}>
-                                      <X className="h-4 w-4 mr-2" />
-                                      Cancel
-                                    </Button>
-                                    <Button onClick={() => updateUser(editingUser)}>
-                                      <Save className="h-4 w-4 mr-2" />
-                                      Save Changes
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -735,7 +788,7 @@ export function AdminPanel() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <BallotTransparencyPanel />
+                <BallotTransparencyPanel showDemoButton={false} />
               </CardContent>
             </Card>
           </TabsContent>

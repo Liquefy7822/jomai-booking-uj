@@ -41,7 +41,7 @@ export default function BallotPage() {
       <div className="px-4 py-6">
         <div className="mx-auto max-w-5xl space-y-8">
           {user.role === "coach" && <CoachBallotForm />}
-          <BallotTransparencyPanel />
+          <BallotTransparencyPanel showDemoButton={true} simplified={true} />
         </div>
       </div>
     </div>

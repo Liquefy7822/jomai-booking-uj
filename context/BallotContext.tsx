@@ -72,7 +72,7 @@ interface BallotContextType {
     ccName: string;
     ccNotes: string;
   }) => { success: boolean; error?: string };
-  runWeeklyAllocation: () => void;
+  runWeeklyAllocation: (addBooking?: (booking: Omit<Booking, "id" | "createdAt">) => void) => void;
   cancelBookingWithPolicy: (
     booking: Booking,
     user: User,
@@ -295,7 +295,7 @@ export function BallotProvider({ children }: { children: ReactNode }) {
     [currentWeek.id],
   );
 
-  const runWeeklyAllocation = useCallback(() => {
+  const runWeeklyAllocation = useCallback((addBooking?: (booking: Omit<Booking, "id" | "createdAt">) => void) => {
     setEntries((prev) => {
       const weekEntries = prev.filter((e) => e.weekId === currentWeek.id);
       const allocated = allocateWeekEntries(weekEntries);
@@ -309,6 +309,27 @@ export function BallotProvider({ children }: { children: ReactNode }) {
           return { ...p, wasNotChosenLastWeek: !selected };
         }),
       );
+
+      // Create bookings for selected entries if addBooking is provided
+      if (addBooking) {
+        allocated.forEach((entry) => {
+          if (entry.status === "selected") {
+            addBooking({
+              courtId: entry.courtId,
+              slotId: entry.slotId,
+              userId: entry.userId,
+              userName: entry.userName,
+              date: entry.date,
+              startTime: entry.startTime,
+              endTime: entry.endTime,
+              openToSharing: entry.openToSharing,
+              ballotEntryId: entry.id,
+              status: "confirmed",
+              amountPaid: 8,
+            });
+          }
+        });
+      }
 
       return prev.map((e) => (e.weekId === currentWeek.id ? byId.get(e.id) ?? e : e));
     });

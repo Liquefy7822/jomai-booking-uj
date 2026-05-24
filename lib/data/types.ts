@@ -9,6 +9,13 @@ export interface UserBookingPreferences {
   scheduleLabel: string;
 }
 
+export interface CreditScoreHistory {
+  date: string;
+  score: number;
+  change: number;
+  reason: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -19,6 +26,7 @@ export interface User {
   nric?: string;
   bookingPreferences?: UserBookingPreferences;
   role?: UserRole;
+  creditScoreHistory?: CreditScoreHistory[];
 }
 
 export interface Court {

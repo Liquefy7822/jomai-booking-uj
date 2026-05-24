@@ -16,6 +16,7 @@ import {
 
 import { useBallot } from "@/context/BallotContext";
 import { useUser } from "@/context/UserContext";
+import { useBooking } from "@/context/BookingContext";
 import { BALLOT_RULES, BALLOT_RULES_SUMMARY } from "@/lib/ballotLogic";
 import { getCourtById } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
@@ -53,8 +54,9 @@ function roleBadge(role: string) {
   return "bg-secondary text-secondary-foreground";
 }
 
-export function BallotTransparencyPanel({ compact = false }: { compact?: boolean }) {
+export function BallotTransparencyPanel({ compact = false, showDemoButton = false, simplified = false }: { compact?: boolean; showDemoButton?: boolean; simplified?: boolean }) {
   const { user } = useUser();
+  const { addBooking } = useBooking();
   const {
     currentWeek,
     rankedEntries,
@@ -173,8 +175,8 @@ export function BallotTransparencyPanel({ compact = false }: { compact?: boolean
               does not affect rank.
             </CardDescription>
           </div>
-          {!compact && (
-            <Button type="button" variant="outline" size="sm" onClick={runWeeklyAllocation}>
+          {showDemoButton && (
+            <Button type="button" variant="outline" size="sm" onClick={() => runWeeklyAllocation(addBooking)}>
               Run demo allocation
             </Button>
           )}
@@ -187,14 +189,14 @@ export function BallotTransparencyPanel({ compact = false }: { compact?: boolean
                 <TableHead>Applicant</TableHead>
                 <TableHead>Slot</TableHead>
                 <TableHead className="text-right">Score</TableHead>
-                <TableHead>Applied (audit)</TableHead>
+                {!simplified && <TableHead>Applied (audit)</TableHead>}
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rankedEntries.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={simplified ? 5 : 6} className="text-center text-muted-foreground">
                     No applications yet for this week.
                   </TableCell>
                 </TableRow>
@@ -221,7 +223,7 @@ export function BallotTransparencyPanel({ compact = false }: { compact?: boolean
                         <span className="font-semibold text-primary">
                           {entry.ballotScore}
                         </span>
-                        {!compact && entry.scoreBreakdown.length > 0 && (
+                        {!simplified && !compact && entry.scoreBreakdown.length > 0 && (
                           <ul className="mt-1 text-xs text-muted-foreground">
                             {entry.scoreBreakdown.slice(0, 2).map((line) => (
                               <li key={line}>{line}</li>
@@ -229,14 +231,16 @@ export function BallotTransparencyPanel({ compact = false }: { compact?: boolean
                           </ul>
                         )}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {new Date(entry.submittedAt).toLocaleString("en-SG", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </TableCell>
+                      {!simplified && (
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(entry.submittedAt).toLocaleString("en-SG", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Badge
                           variant={
