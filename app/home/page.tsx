@@ -9,7 +9,6 @@ import { Navbar } from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Search, Scale, ArrowRight } from "lucide-react";
-import { BallotTransparencyPanel } from "@/components/BallotTransparencyPanel";
 import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
@@ -113,11 +112,6 @@ export default function HomePage() {
               ))}
             </div>
           )}
-
-          <div className="mt-10">
-            <h2 className="mb-4 font-medium text-foreground">Ballot transparency</h2>
-            <BallotTransparencyPanel compact />
-          </div>
         </div>
       </div>
     </div>

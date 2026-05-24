@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { courts, users, initialBookings, initialMatchmakingPosts } from "@/lib/mockData";
 import type { Booking, User, MatchmakingPost, Court } from "@/lib/mockData";
+import { BallotTransparencyPanel } from "@/components/BallotTransparencyPanel";
 
 export function AdminPanel() {
   const { admin, logout } = useAdmin();
@@ -181,11 +182,12 @@ export function AdminPanel() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="courts">Courts</TabsTrigger>
             <TabsTrigger value="matchmaking">Matchmaking</TabsTrigger>
+            <TabsTrigger value="ballot">Ballot</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -716,6 +718,24 @@ export function AdminPanel() {
                     </Card>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Ballot Tab */}
+          <TabsContent value="ballot" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Ballot Rankings & Queue
+                </CardTitle>
+                <CardDescription>
+                  View ballot applications, rankings, and transparency information
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BallotTransparencyPanel />
               </CardContent>
             </Card>
           </TabsContent>
