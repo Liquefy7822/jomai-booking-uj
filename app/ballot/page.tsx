@@ -7,6 +7,11 @@ import { BallotTransparencyPanel } from "@/components/BallotTransparencyPanel";
 import { Navbar } from "@/components/Navbar";
 import { CoachBallotForm } from "@/components/CoachBallotForm";
 import { useUser } from "@/context/UserContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Gavel } from "lucide-react";
 
 export default function BallotPage() {
   const { user, isLoading } = useUser();
@@ -42,6 +47,32 @@ export default function BallotPage() {
         <div className="mx-auto max-w-5xl space-y-8">
           {user.role === "coach" && <CoachBallotForm />}
           <BallotTransparencyPanel showDemoButton={true} simplified={true} />
+
+          {/* Fake Coach Application Form for Demo */}
+          <Card className="border-blue-200 bg-blue-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Gavel className="h-5 w-5 text-blue-600" />
+                Coach Application Form
+              </CardTitle>
+              <CardDescription>
+                Apply for court allocation through Community Centre (Demo Form)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cc-name">Community Centre Name</Label>
+                <Input id="cc-name" placeholder="e.g., Tampines West CC" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cc-notes">Application Notes</Label>
+                <Input id="cc-notes" placeholder="Describe your training needs..." />
+              </div>
+              <Button className="w-full" variant="outline">
+                Submit Application
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

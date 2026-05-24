@@ -35,6 +35,7 @@ import { courts, users, initialBookings, initialMatchmakingPosts } from "@/lib/m
 import type { Booking, User, MatchmakingPost, Court } from "@/lib/mockData";
 import { BallotTransparencyPanel } from "@/components/BallotTransparencyPanel";
 import type { CreditScoreHistory } from "@/lib/data/types";
+import { users as mockUsers } from "@/lib/data/mockUsers";
 
 export function AdminPanel() {
   const { admin, logout } = useAdmin();
@@ -777,20 +778,50 @@ export function AdminPanel() {
 
           {/* Ballot Tab */}
           <TabsContent value="ballot" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Ballot Rankings & Queue
-                </CardTitle>
-                <CardDescription>
-                  View ballot applications, rankings, and transparency information
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <BallotTransparencyPanel showDemoButton={false} />
-              </CardContent>
-            </Card>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {mockUsers.map((user) => (
+                <Card key={user.id} className="border-primary/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="text-lg">{user.name}</span>
+                      <Badge variant={user.priorityScore >= 80 ? "default" : user.priorityScore >= 60 ? "secondary" : "outline"}>
+                        {user.priorityScore}
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>{user.email}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Member since</span>
+                      <span>{user.createdAt}</span>
+                    </div>
+                    {user.creditScoreHistory && user.creditScoreHistory.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Credit Score History</div>
+                        <div className="space-y-1 max-h-40 overflow-y-auto">
+                          {user.creditScoreHistory.slice(-5).map((entry, index) => (
+                            <div key={index} className="flex items-center justify-between text-xs p-2 bg-muted/30 rounded">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{entry.score}</span>
+                                {entry.change !== 0 && (
+                                  <Badge variant={entry.change > 0 ? "default" : "destructive"} className="text-xs h-5">
+                                    {entry.change > 0 ? "+" : ""}{entry.change}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <div className="text-muted-foreground">{entry.date}</div>
+                                <div className="text-muted-foreground">{entry.reason}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
 
           {/* Analytics Tab */}

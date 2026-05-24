@@ -12,66 +12,7 @@ const weekSaturday = new Date(week.weekStart);
 weekSaturday.setDate(weekSaturday.getDate() + 5);
 const saturdayISO = weekSaturday.toISOString().split("T")[0];
 
-export const initialBallotEntries: BallotEntry[] = [
-  {
-    id: "ballot-1",
-    weekId: week.id,
-    userId: "demo-elderly",
-    userName: "Lim Mei Ling",
-    userRole: "elderly",
-    courtId: "court-5",
-    slotId: "slot-court-5-demo",
-    date: saturdayISO,
-    startTime: "10:00",
-    endTime: "11:00",
-    submittedAt: "2026-05-10T14:22:00.000Z",
-    ballotScore: 95,
-    scoreBreakdown: [
-      "+25 not chosen last week (priority)",
-      "+20 elderly weekend disadvantaged-access priority",
-      "+10 community priority score",
-    ],
-    status: "pending",
-    openToSharing: true,
-  },
-  {
-    id: "ballot-2",
-    weekId: week.id,
-    userId: "demo-resident-a",
-    userName: "Tan Wei Ming",
-    userRole: "resident",
-    courtId: "court-1",
-    slotId: "slot-court-1-demo",
-    date: week.weekStart,
-    startTime: "18:00",
-    endTime: "19:00",
-    submittedAt: "2026-05-11T09:05:00.000Z",
-    ballotScore: 72,
-    scoreBreakdown: ["+12 community priority score"],
-    status: "pending",
-    openToSharing: false,
-  },
-  {
-    id: "ballot-3",
-    weekId: week.id,
-    userId: "demo-resident-b",
-    userName: "Ahmad Rizal",
-    userRole: "resident",
-    courtId: "court-1",
-    slotId: "slot-court-1-demo",
-    date: week.weekStart,
-    startTime: "18:00",
-    endTime: "19:00",
-    submittedAt: "2026-05-12T20:41:00.000Z",
-    ballotScore: 68,
-    scoreBreakdown: [
-      "+25 not chosen last week (priority)",
-      "+8 community priority score",
-    ],
-    status: "pending",
-    openToSharing: true,
-  },
-];
+export const initialBallotEntries: BallotEntry[] = [];
 
 export const initialBallotProfiles: UserBallotProfile[] = [
   {

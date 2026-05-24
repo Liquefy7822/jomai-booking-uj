@@ -66,6 +66,7 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
     votingOpen,
     getProfile,
     runWeeklyAllocation,
+    entries,
   } = useBallot();
 
   const myProfile = user ? getProfile(user.id) : null;
@@ -76,8 +77,58 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
     Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60)),
   );
 
+  // Get user's own ballot entries for this week
+  const myBallotEntries = user
+    ? entries.filter((e) => e.weekId === currentWeek.id && e.userId === user.id)
+    : [];
+
   return (
     <div className={cn("space-y-6", compact && "space-y-4")}>
+      {/* User's Ballots Section */}
+      {user && myBallotEntries.length > 0 && (
+        <Card className="border-emerald-200 bg-emerald-50/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              Your Ballot Applications ({myBallotEntries.length})
+            </CardTitle>
+            <CardDescription>
+              Your applications for this week
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {myBallotEntries.map((entry) => {
+              const court = getCourtById(entry.courtId);
+              return (
+                <div key={entry.id} className="flex items-center justify-between p-3 bg-background rounded-lg border">
+                  <div>
+                    <div className="font-medium">{court?.name || entry.courtId}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {entry.date} {entry.startTime} - {entry.endTime}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-primary">{entry.ballotScore}</div>
+                    <Badge
+                      variant={
+                        entry.status === "selected"
+                          ? "default"
+                          : entry.status === "not_selected"
+                            ? "secondary"
+                            : "outline"
+                      }
+                      className="text-xs"
+                    >
+                      {entry.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-primary/30 bg-primary/5">
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -143,25 +194,6 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
           </CardContent>
         </Card>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Info className="size-4" />
-            Rules (transparent)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            {BALLOT_RULES_SUMMARY.map((rule) => (
-              <li key={rule} className="flex gap-2">
-                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
-                <span>{rule}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2">

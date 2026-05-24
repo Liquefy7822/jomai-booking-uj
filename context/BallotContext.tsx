@@ -223,11 +223,10 @@ export function BallotProvider({ children }: { children: ReactNode }) {
         (e) =>
           e.weekId === currentWeek.id &&
           e.userId === params.user.id &&
-          e.slotId === params.slot.id &&
           e.status === "pending",
       );
       if (duplicate) {
-        return { success: false, error: "You already applied for this slot." };
+        return { success: false, error: "You already have a pending ballot application for this week." };
       }
 
       const { score, breakdown } = calculateBallotScore(

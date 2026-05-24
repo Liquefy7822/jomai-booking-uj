@@ -22,20 +22,20 @@ export function BluetoothCheckIn({ courtName, bookingId, onCheckInComplete }: Bl
     setConnectionStatus('connecting');
     setErrorMessage("");
 
-    // Simulate Bluetooth discovery and connection process
+    // Simulate Bluetooth discovery and connection process (faster)
     try {
-      // Step 1: Scanning for nearby devices (2 seconds)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Step 2: Found court device, attempting connection (1.5 seconds)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Step 3: Verifying court location (1 second)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Step 1: Scanning for nearby devices (0.5 seconds)
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Step 2: Found court device, attempting connection (0.5 seconds)
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Step 3: Verifying court location (0.3 seconds)
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       // Step 4: Random success/failure for demo (80% success rate)
       const isSuccess = Math.random() > 0.2;
-      
+
       if (isSuccess) {
         setConnectionStatus('connected');
         onCheckInComplete?.(true);

@@ -36,10 +36,10 @@ export default function ProfilePage() {
     }
   }, [user, userLoading, router]);
 
-  // Update bookings when they change
+  // Update bookings when they change - only show ballot bookings
   useEffect(() => {
     const filteredBookings = bookings
-      .filter((b) => b.userId === user?.id)
+      .filter((b) => b.userId === user?.id && b.ballotEntryId) // Only show bookings from ballot
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     setUserBookings(filteredBookings);
   }, [bookings, user]);
