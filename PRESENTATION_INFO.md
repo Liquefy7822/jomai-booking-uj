@@ -11,7 +11,7 @@
 ### Smart Allocation Algorithm
 - **Priority-based scoring** - Considers multiple factors: elderly priority, previous week selection, community contribution
 - **Dynamic scoring** - Adjusts based on demand, user behavior, and fairness metrics
-- **Elderly disadvantaged-access slots** - Weekend priority for elderly residents
+- **Elderly weekday priority** - Higher chance on weekdays, lower on weekends
 - **Monthly override system** - Elderly can use one-time boost when playing with new partners
 
 ### User Experience
@@ -119,7 +119,7 @@
 
 ### Primary Users
 - **Residents** - Singapore residents looking to book badminton courts
-- **Elderly Residents** - Disadvantaged-access priority for weekend slots
+- **Elderly Residents** - Weekday priority (higher chance on weekdays, lower on weekends)
 - **Coaches** - Professional coaches booking courts for training sessions
 
 ### Secondary Users

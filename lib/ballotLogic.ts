@@ -20,7 +20,7 @@ export const BALLOT_RULES_SUMMARY = [
   "Voting for the upcoming week closes every Sunday at 11:59 PM.",
   "Applicants are ranked by fairness score — not by who applied first.",
   "Residents not chosen last week receive priority this week.",
-  "Elderly residents receive weekend priority (disadvantaged-access slots).",
+  "Elderly residents receive weekday priority (higher chance on weekdays, lower on weekends).",
   "Maximum 2 court bookings per calendar month. A second booking is harder when demand is high.",
   "Elderly residents matching a new (different) partner may use one ballot override per month.",
   "Coaches apply with their Community Centre (CC); CCs review statistics before week-round slots are held.",
@@ -146,9 +146,9 @@ export function calculateBallotScore(
     breakdown.push("+25 not chosen last week (priority)");
   }
 
-  if (role === "elderly" && isWeekend(slot.date)) {
+  if (role === "elderly" && !isWeekend(slot.date)) {
     score += 20;
-    breakdown.push("+20 elderly weekend disadvantaged-access priority");
+    breakdown.push("+20 elderly weekday priority");
   }
 
   if (role === "coach") {

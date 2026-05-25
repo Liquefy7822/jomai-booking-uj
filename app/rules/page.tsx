@@ -102,7 +102,7 @@ export default function RulesPage() {
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
                 <p>• Residents not chosen last week receive priority</p>
-                <p>• Elderly residents get weekend priority</p>
+                <p>• Elderly residents get weekday priority (higher chance on weekdays, lower on weekends)</p>
                 <p>• Elderly can use 1 monthly override with new partner</p>
                 <p>• Coaches apply via Community Centre</p>
               </CardContent>
