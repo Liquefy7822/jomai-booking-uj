@@ -19,6 +19,7 @@ interface BookingContextType {
   addMatchmakingPost: (post: Omit<MatchmakingPost, "id" | "createdAt">) => void;
   joinMatchmakingPost: (postId: string, userName: string) => void;
   leaveMatchmakingPost: (postId: string, userName: string) => void;
+  resetDemoData: () => void;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
@@ -136,6 +137,18 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const resetDemoData = () => {
+    // Clear demo state so you can re-test ballot applications cleanly.
+    try {
+      localStorage.removeItem("bookit-bookings");
+      localStorage.removeItem("bookit-matchmaking");
+    } catch {
+      // ignore (non-browser)
+    }
+    setBookings(initialBookings);
+    setMatchmakingPosts(initialMatchmakingPosts);
+  };
+
   return (
     <BookingContext.Provider
       value={{
@@ -147,6 +160,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         addMatchmakingPost,
         joinMatchmakingPost,
         leaveMatchmakingPost,
+        resetDemoData,
       }}
     >
       {children}

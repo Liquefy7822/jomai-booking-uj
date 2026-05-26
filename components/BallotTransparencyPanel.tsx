@@ -57,7 +57,7 @@ function roleBadge(role: string) {
 
 export function BallotTransparencyPanel({ compact = false, showDemoButton = false, simplified = false }: { compact?: boolean; showDemoButton?: boolean; simplified?: boolean }) {
   const { user } = useUser();
-  const { addBooking } = useBooking();
+  const { addBooking, resetDemoData } = useBooking();
   const {
     currentWeek,
     rankedEntries,
@@ -69,6 +69,7 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
     runWeeklyAllocation,
     entries,
     cancelBallotEntry,
+    resetBallot,
   } = useBallot();
 
   const myProfile = user ? getProfile(user.id) : null;
@@ -83,6 +84,13 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
   const myBallotEntries = user
     ? entries.filter((e) => e.weekId === currentWeek.id && e.userId === user.id)
     : [];
+
+  const clearMyPendingApplications = () => {
+    if (!myBallotEntries.length) return;
+    const pending = myBallotEntries.filter((e) => e.status === "pending");
+    if (pending.length === 0) return;
+    pending.forEach((e) => cancelBallotEntry(e.id));
+  };
 
   // Group ranked entries by court
   const entriesByCourt = rankedEntries.reduce((acc, entry) => {
@@ -114,6 +122,46 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
             <CardDescription>
               Your applications for this ballot week
             </CardDescription>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs"
+                onClick={() => {
+                  if (
+                    confirm(
+                      "Clear your pending ballot applications for this week?",
+                    )
+                  ) {
+                    clearMyPendingApplications();
+                  }
+                }}
+                disabled={
+                  myBallotEntries.filter((e) => e.status === "pending").length === 0
+                }
+              >
+                Clear my pending
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                className="h-8 text-xs"
+                onClick={() => {
+                  if (
+                    confirm(
+                      "Reset demo ballots and bookings back to the seeded data? This affects everyone on this prototype.",
+                    )
+                  ) {
+                    resetBallot();
+                    resetDemoData();
+                  }
+                }}
+              >
+                Reset demo queues
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-2">
             {myBallotEntries.length === 0 ? (
@@ -153,7 +201,7 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
                       >
                         {entry.status.replace("_", " ")}
                       </Badge>
-                      {entry.status === "pending" && votingOpen && (
+                      {entry.status === "pending" && (
                         <Button
                           size="sm"
                           variant="outline"

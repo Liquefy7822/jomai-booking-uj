@@ -217,10 +217,15 @@ export function validateBallotApplication(
     };
   }
 
-  if (!canApplyForDate(slot.date)) {
+  // Ballot window: bookings can be started up to 7 days before the target week starts.
+  // Once within the target ballot week window, allow applying for any day in that week.
+  const now = new Date();
+  const bookingOpenStart = new Date(week.weekStart);
+  bookingOpenStart.setDate(bookingOpenStart.getDate() - BALLOT_RULES.advanceBookingDays);
+  if (now < bookingOpenStart) {
     return {
       valid: false,
-      error: `Bookings can only be applied up to ${BALLOT_RULES.advanceBookingDays} days in advance.`,
+      error: `Bookings open ${BALLOT_RULES.advanceBookingDays} days before the ballot week.`,
     };
   }
 

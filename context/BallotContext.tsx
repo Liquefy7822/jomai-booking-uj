@@ -83,6 +83,7 @@ interface BallotContextType {
     nextInLine?: string;
   };
   cancelBallotEntry: (entryId: string) => void;
+  resetBallot: () => void;
   votingOpen: boolean;
 }
 
@@ -398,6 +399,19 @@ export function BallotProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const resetBallot = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore (non-browser)
+    }
+    setEntries(initialBallotEntries);
+    setProfiles(initialBallotProfiles);
+    setCoachApplications(initialCoachApplications);
+    setCancellations(initialCancellationEvents);
+    setNotices(initialNeighbourhoodNotices);
+  }, []);
+
   const votingOpen = isVotingOpen(currentWeek);
 
   return (
@@ -416,6 +430,7 @@ export function BallotProvider({ children }: { children: ReactNode }) {
         runWeeklyAllocation,
         cancelBookingWithPolicy,
         cancelBallotEntry,
+        resetBallot,
         votingOpen,
       }}
     >
