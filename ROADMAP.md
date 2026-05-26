@@ -1,4 +1,7 @@
-# JomAI Booking System - Development Roadmap
+# BookIt — Development Roadmap
+
+> **Current shipped features** are listed in [`README.md`](./README.md#whats-built-this-repo).  
+> This document describes **planned** work only. Milestone checkboxes below are targets, not completed work.
 
 ## Phase 1: AI-Powered Balloting (Priority: High)
 **Timeline: 2-3 weeks**
@@ -158,27 +161,27 @@
 
 ---
 
-## Milestones
+## Milestones (targets)
 
 ### Month 1
-- ✅ AI Ballot Modal MVP
-- ✅ Chatbot basic functionality
-- ✅ Admin AI anomaly detection
+- [ ] AI ballot modal MVP
+- [ ] Chatbot with real LLM backend
+- [ ] Admin anomaly detection
 
 ### Month 2
-- ✅ Mobile PWA launch
-- ✅ Payment integration
-- ✅ Real database migration
+- [ ] Mobile PWA launch
+- [ ] Payment integration
+- [ ] Real database migration
 
 ### Month 3
-- ✅ Advanced admin analytics
-- ✅ Social features launch
-- ✅ External integrations
+- [ ] Advanced admin analytics
+- [ ] Social features launch
+- [ ] External integrations
 
 ### Month 6
-- ✅ Computer Vision features
-- ✅ Advanced predictive models
-- ✅ Full production deployment
+- [ ] Computer vision / occupancy (if pursued)
+- [ ] Advanced predictive models
+- [ ] Full production deployment
 
 ---
 
