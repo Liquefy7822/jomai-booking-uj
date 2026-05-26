@@ -61,13 +61,13 @@ export function BluetoothCheckIn({ courtName, bookingId, onCheckInComplete }: Bl
   const getStatusIcon = () => {
     switch (connectionStatus) {
       case 'connecting':
-        return <Loader2 className="h-5 w-5 animate-spin text-blue-600" />;
+        return <Loader2 className="h-5 w-5 animate-spin text-primary" />;
       case 'connected':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />;
       case 'failed':
-        return <XCircle className="h-5 w-5 text-red-600" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
       default:
-        return <Bluetooth className="h-5 w-5 text-gray-600" />;
+        return <Bluetooth className="h-5 w-5 text-primary" />;
     }
   };
 
@@ -85,28 +85,32 @@ export function BluetoothCheckIn({ courtName, bookingId, onCheckInComplete }: Bl
   };
 
   return (
-    <Card className="border-blue-200 bg-blue-50/50">
+    <Card className="border-primary/25 bg-accent/40 text-card-foreground dark:border-primary/30 dark:bg-card">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Bluetooth className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2 text-lg text-card-foreground">
+          <Bluetooth className="h-5 w-5 text-primary" />
           Court Check-In
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
+      <CardContent className="space-y-4 text-card-foreground">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="font-medium text-foreground">{courtName}</p>
-            <p className="text-sm text-muted-foreground">Booking ID: {bookingId}</p>
+            <p className="font-medium">{courtName}</p>
+            <p className="text-sm text-foreground/75 dark:text-card-foreground/90">
+              Booking ID: {bookingId}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {getStatusIcon()}
-            <span className="text-sm font-medium">{getStatusText()}</span>
+            <span className="text-sm font-medium text-foreground dark:text-card-foreground">
+              {getStatusText()}
+            </span>
           </div>
         </div>
 
         {connectionStatus === 'idle' && (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-foreground/80 dark:text-card-foreground/90">
               Verify your presence at the court using Bluetooth for secure check-in.
             </p>
             <Button 
@@ -124,24 +128,29 @@ export function BluetoothCheckIn({ courtName, bookingId, onCheckInComplete }: Bl
           <div className="space-y-3">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Scanning for nearby court devices...</span>
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span className="text-sm text-foreground dark:text-card-foreground">
+                  Scanning for nearby court devices...
+                </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }} />
+              <div className="h-2 w-full rounded-full bg-muted">
+                <div
+                  className="h-2 animate-pulse rounded-full bg-primary"
+                  style={{ width: "60%" }}
+                />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Make sure you're within 10 meters of the court and Bluetooth is enabled.
+            <p className="text-xs text-foreground/75 dark:text-card-foreground/90">
+              Make sure you&apos;re within 10 meters of the court and Bluetooth is enabled.
             </p>
           </div>
         )}
 
         {connectionStatus === 'connected' && (
-          <Alert className="border-green-200 bg-green-50">
-            <BluetoothConnected className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
-              <strong>Check-in successful!</strong> You have been verified at {courtName}. 
+          <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50">
+            <BluetoothConnected className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertDescription className="text-green-900 dark:text-green-100">
+              <strong>Check-in successful!</strong> You have been verified at {courtName}.
               Your booking is now active. Enjoy your game!
             </AlertDescription>
           </Alert>
@@ -149,9 +158,9 @@ export function BluetoothCheckIn({ courtName, bookingId, onCheckInComplete }: Bl
 
         {connectionStatus === 'failed' && (
           <div className="space-y-3">
-            <Alert className="border-red-200 bg-red-50">
-              <BluetoothOff className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
+            <Alert className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/50">
+              <BluetoothOff className="h-4 w-4 text-destructive" />
+              <AlertDescription className="text-red-900 dark:text-red-100">
                 {errorMessage}
               </AlertDescription>
             </Alert>
@@ -165,12 +174,14 @@ export function BluetoothCheckIn({ courtName, bookingId, onCheckInComplete }: Bl
           </div>
         )}
 
-        <div className="text-xs text-muted-foreground border-t pt-3">
-          <p className="font-medium">How it works:</p>
+        <div className="border-t border-border pt-3 text-xs text-foreground/80 dark:text-card-foreground/90">
+          <p className="font-medium text-foreground dark:text-card-foreground">
+            How it works:
+          </p>
           <ul className="mt-1 space-y-1">
             <li>• Ensure Bluetooth is enabled on your device</li>
             <li>• Be within 10 meters of the booked court</li>
-            <li>• Tap "Check In" to verify your location</li>
+            <li>• Tap &quot;Check In&quot; to verify your location</li>
             <li>• System confirms your presence automatically</li>
           </ul>
         </div>
