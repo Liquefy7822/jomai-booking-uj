@@ -8,7 +8,7 @@ import { useBallot } from "@/context/BallotContext";
 import { BookingCard } from "@/components/BookingCard";
 import { BluetoothCheckIn } from "@/components/BluetoothCheckIn";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import {
   User,
@@ -28,6 +28,7 @@ export default function ProfilePage() {
   const { cancelBookingWithPolicy } = useBallot();
   const router = useRouter();
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
+  const [dismissedCourts, setDismissedCourts] = useState<Set<string>>(new Set());
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -43,6 +44,20 @@ export default function ProfilePage() {
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     setUserBookings(filteredBookings);
   }, [bookings, user]);
+
+  // Group bookings by court
+  const bookingsByCourt = userBookings.reduce((acc, booking) => {
+    const courtId = booking.courtId;
+    if (!acc[courtId]) {
+      acc[courtId] = [];
+    }
+    acc[courtId].push(booking);
+    return acc;
+  }, {} as Record<string, Booking[]>);
+
+  const dismissCourt = (courtId: string) => {
+    setDismissedCourts((prev: Set<string>) => new Set([...prev, courtId]));
+  };
 
   const handleCheckIn = (bookingId: string, success: boolean) => {
     if (success) {
@@ -229,64 +244,93 @@ export default function ProfilePage() {
                     </Card>
                   ) : (
                     <div className="space-y-4">
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {upcomingBookings.map((booking) => (
-                          <BookingCard
-                            key={booking.id}
-                            booking={booking}
-                            onCancel={() => {
-                              const result = cancelBookingWithPolicy(
-                                { ...booking, amountPaid: 8 },
-                                user,
-                              );
-                              const msg = [
-                                result.message,
-                                result.fee > 0
-                                  ? `Fee: $${result.fee.toFixed(2)}`
-                                  : null,
-                                result.nextInLine
-                                  ? `Offered to: ${result.nextInLine}`
-                                  : null,
-                              ]
-                                .filter(Boolean)
-                                .join("\n");
-                              if (confirm(`Cancel this booking?\n\n${msg}`)) {
-                                cancelBooking(booking.id);
-                              }
-                            }}
-                          />
-                        ))}
-                      </div>
-                      
-                      {/* Bluetooth Check-in Section */}
-                      <div className="mt-6">
-                        <h3 className="mb-3 font-semibold text-foreground">
-                          Court Check-In
-                        </h3>
-                        <div className="space-y-3">
-                          {upcomingBookings
-                            .filter(booking => !booking.checkedIn)
-                            .map((booking) => {
-                              const court = getCourtById(booking.courtId);
-                              return (
-                                <BluetoothCheckIn
-                                  key={booking.id}
-                                  courtName={court?.name || "Unknown Court"}
-                                  bookingId={booking.id}
-                                  onCheckInComplete={(success) => handleCheckIn(booking.id, success)}
-                                />
-                              );
-                            })}
-                          {upcomingBookings.every(booking => booking.checkedIn) && (
-                            <Card>
-                              <CardContent className="p-4 text-center">
-                                <p className="text-sm text-muted-foreground">
-                                  All upcoming bookings have been checked in.
-                                </p>
+                      {Object.entries(bookingsByCourt)
+                        .filter(([courtId]) => !dismissedCourts.has(courtId))
+                        .map(([courtId, courtBookings]) => {
+                          const court = getCourtById(courtId);
+                          const courtUpcoming = courtBookings.filter(
+                            (b) => new Date(b.date) >= new Date(new Date().toDateString())
+                          );
+                          if (courtUpcoming.length === 0) return null;
+
+                          return (
+                            <Card key={courtId} className="border-muted">
+                              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                                <CardTitle className="text-base">{court?.name || courtId}</CardTitle>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 text-xs"
+                                  onClick={() => dismissCourt(courtId)}
+                                >
+                                  Dismiss
+                                </Button>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                  {courtUpcoming.map((booking) => (
+                                    <BookingCard
+                                      key={booking.id}
+                                      booking={booking}
+                                      onCancel={() => {
+                                        const result = cancelBookingWithPolicy(
+                                          { ...booking, amountPaid: 8 },
+                                          user,
+                                        );
+                                        const msg = [
+                                          result.message,
+                                          result.fee > 0
+                                            ? `Fee: $${result.fee.toFixed(2)}`
+                                            : null,
+                                          result.nextInLine
+                                            ? `Offered to: ${result.nextInLine}`
+                                            : null,
+                                        ]
+                                          .filter(Boolean)
+                                          .join("\n");
+                                        if (confirm(`Cancel this booking?\n\n${msg}`)) {
+                                          cancelBooking(booking.id);
+                                        }
+                                      }}
+                                    />
+                                  ))}
+                                </div>
                               </CardContent>
                             </Card>
-                          )}
-                        </div>
+                          );
+                        })}
+                    </div>
+                  )}
+
+                  {/* Bluetooth Check-in Section */}
+                  {upcomingBookings.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="mb-3 font-semibold text-foreground">
+                        Court Check-In
+                      </h3>
+                      <div className="space-y-3">
+                        {upcomingBookings
+                          .filter(booking => !booking.checkedIn)
+                          .map((booking) => {
+                            const court = getCourtById(booking.courtId);
+                            return (
+                              <BluetoothCheckIn
+                                key={booking.id}
+                                courtName={court?.name || "Unknown Court"}
+                                bookingId={booking.id}
+                                onCheckInComplete={(success) => handleCheckIn(booking.id, success)}
+                              />
+                            );
+                          })}
+                        {upcomingBookings.every(booking => booking.checkedIn) && (
+                          <Card>
+                            <CardContent className="p-4 text-center">
+                              <p className="text-sm text-muted-foreground">
+                                All upcoming bookings have been checked in.
+                              </p>
+                            </CardContent>
+                          </Card>
+                        )}
                       </div>
                     </div>
                   )}

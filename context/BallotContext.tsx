@@ -82,6 +82,7 @@ interface BallotContextType {
     message: string;
     nextInLine?: string;
   };
+  cancelBallotEntry: (entryId: string) => void;
   votingOpen: boolean;
 }
 
@@ -390,6 +391,13 @@ export function BallotProvider({ children }: { children: ReactNode }) {
     [entries],
   );
 
+  const cancelBallotEntry = useCallback(
+    (entryId: string) => {
+      setEntries((prev) => prev.filter((e) => e.id !== entryId));
+    },
+    [],
+  );
+
   const votingOpen = isVotingOpen(currentWeek);
 
   return (
@@ -407,6 +415,7 @@ export function BallotProvider({ children }: { children: ReactNode }) {
         submitCoachApplication,
         runWeeklyAllocation,
         cancelBookingWithPolicy,
+        cancelBallotEntry,
         votingOpen,
       }}
     >

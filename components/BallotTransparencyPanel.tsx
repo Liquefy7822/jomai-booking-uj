@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -67,6 +68,7 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
     getProfile,
     runWeeklyAllocation,
     entries,
+    cancelBallotEntry,
   } = useBallot();
 
   const myProfile = user ? getProfile(user.id) : null;
@@ -82,11 +84,28 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
     ? entries.filter((e) => e.weekId === currentWeek.id && e.userId === user.id)
     : [];
 
+  // Group ranked entries by court
+  const entriesByCourt = rankedEntries.reduce((acc, entry) => {
+    const courtId = entry.courtId;
+    if (!acc[courtId]) {
+      acc[courtId] = [];
+    }
+    acc[courtId].push(entry);
+    return acc;
+  }, {} as Record<string, typeof rankedEntries>);
+
+  // State for dismissed courts
+  const [dismissedCourts, setDismissedCourts] = useState<Set<string>>(new Set());
+
+  const dismissCourt = (courtId: string) => {
+    setDismissedCourts((prev: Set<string>) => new Set([...prev, courtId]));
+  };
+
   return (
     <div className={cn("space-y-6", compact && "space-y-4")}>
       {/* User's Ballots Section */}
       {user && myBallotEntries.length > 0 && (
-        <Card className="border-emerald-200 bg-emerald-50/50">
+        <Card className="border-emerald-200 bg-emerald-50">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -121,6 +140,16 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
                     >
                       {entry.status.replace("_", " ")}
                     </Badge>
+                    {entry.status === "pending" && votingOpen && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="mt-1 h-6 text-xs"
+                        onClick={() => cancelBallotEntry(entry.id)}
+                      >
+                        Cancel
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
@@ -213,85 +242,96 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
             </Button>
           )}
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                <TableHead>Applicant</TableHead>
-                <TableHead>Slot</TableHead>
-                <TableHead className="text-right">Score</TableHead>
-                {!simplified && <TableHead>Applied (audit)</TableHead>}
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rankedEntries.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={simplified ? 5 : 6} className="text-center text-muted-foreground">
-                    No applications yet for this week.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                rankedEntries.map((entry, index) => {
-                  const court = getCourtById(entry.courtId);
-                  return (
-                    <TableRow key={entry.id}>
-                      <TableCell className="font-medium">{index + 1}</TableCell>
-                      <TableCell>
-                        <div className="font-medium">{entry.userName}</div>
-                        <Badge className={cn("mt-1 text-xs", roleBadge(entry.userRole))}>
-                          {entry.userRole}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {court?.name ?? entry.courtId}
-                        <br />
-                        <span className="text-muted-foreground">
-                          {entry.date} {entry.startTime}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className="font-semibold text-primary">
-                          {entry.ballotScore}
-                        </span>
-                        {!simplified && !compact && entry.scoreBreakdown.length > 0 && (
-                          <ul className="mt-1 text-xs text-muted-foreground">
-                            {entry.scoreBreakdown.slice(0, 2).map((line) => (
-                              <li key={line}>{line}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </TableCell>
-                      {!simplified && (
-                        <TableCell className="text-xs text-muted-foreground">
-                          {new Date(entry.submittedAt).toLocaleString("en-SG", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </TableCell>
-                      )}
-                      <TableCell>
-                        <Badge
-                          variant={
-                            entry.status === "selected"
-                              ? "default"
-                              : entry.status === "not_selected"
-                                ? "secondary"
-                                : "outline"
-                          }
-                        >
-                          {entry.status.replace("_", " ")}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+        <CardContent className="space-y-4">
+          {rankedEntries.length === 0 ? (
+            <p className="text-center text-muted-foreground">No applications yet for this week.</p>
+          ) : (
+            Object.entries(entriesByCourt)
+              .filter(([courtId]) => !dismissedCourts.has(courtId))
+              .map(([courtId, courtEntries]) => {
+                const court = getCourtById(courtId);
+                return (
+                  <Card key={courtId} className="border-muted">
+                    <CardHeader className="flex flex-row items-center justify-between pb-3">
+                      <CardTitle className="text-base">{court?.name || courtId}</CardTitle>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 text-xs"
+                        onClick={() => dismissCourt(courtId)}
+                      >
+                        Dismiss
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-12">#</TableHead>
+                            <TableHead>Applicant</TableHead>
+                            <TableHead>Slot</TableHead>
+                            <TableHead className="text-right">Score</TableHead>
+                            {!simplified && <TableHead>Applied (audit)</TableHead>}
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {courtEntries.map((entry, index) => (
+                            <TableRow key={entry.id}>
+                              <TableCell className="font-medium">{index + 1}</TableCell>
+                              <TableCell>
+                                <div className="font-medium">{entry.userName}</div>
+                                <Badge className={cn("mt-1 text-xs", roleBadge(entry.userRole))}>
+                                  {entry.userRole}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {entry.date} {entry.startTime}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <span className="font-semibold text-primary">
+                                  {entry.ballotScore}
+                                </span>
+                                {!simplified && !compact && entry.scoreBreakdown.length > 0 && (
+                                  <ul className="mt-1 text-xs text-muted-foreground">
+                                    {entry.scoreBreakdown.slice(0, 2).map((line) => (
+                                      <li key={line}>{line}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </TableCell>
+                              {!simplified && (
+                                <TableCell className="text-xs text-muted-foreground">
+                                  {new Date(entry.submittedAt).toLocaleString("en-SG", {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </TableCell>
+                              )}
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    entry.status === "selected"
+                                      ? "default"
+                                      : entry.status === "not_selected"
+                                        ? "secondary"
+                                        : "outline"
+                                  }
+                                >
+                                  {entry.status.replace("_", " ")}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                );
+              })
+          )}
         </CardContent>
       </Card>
 
