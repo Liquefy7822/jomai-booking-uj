@@ -104,56 +104,70 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
   return (
     <div className={cn("space-y-6", compact && "space-y-4")}>
       {/* User's Ballots Section */}
-      {user && myBallotEntries.length > 0 && (
-        <Card className="border-emerald-200 bg-emerald-50">
+      {user && (
+        <Card className="border-primary/30 bg-card">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <CheckCircle2 className="h-4 w-4 text-primary" />
               Your Ballot Applications ({myBallotEntries.length})
             </CardTitle>
             <CardDescription>
-              Your applications for this week
+              Your applications for this ballot week
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {myBallotEntries.map((entry) => {
-              const court = getCourtById(entry.courtId);
-              return (
-                <div key={entry.id} className="flex items-center justify-between p-3 bg-background rounded-lg border">
-                  <div>
-                    <div className="font-medium">{court?.name || entry.courtId}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {entry.date} {entry.startTime} - {entry.endTime}
+            {myBallotEntries.length === 0 ? (
+              <div className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                You have no ballot applications yet this week. Apply from a court slot to
+                see live status here.
+              </div>
+            ) : (
+              myBallotEntries.map((entry) => {
+                const court = getCourtById(entry.courtId);
+                const rank =
+                  rankedEntries.findIndex((e) => e.id === entry.id) + 1;
+                return (
+                  <div
+                    key={entry.id}
+                    className="flex items-center justify-between rounded-lg border bg-muted/20 p-3"
+                  >
+                    <div>
+                      <div className="font-medium">{court?.name || entry.courtId}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {entry.date} {entry.startTime} - {entry.endTime}
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Queue rank: #{rank > 0 ? rank : "-"} · Score: {entry.ballotScore}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge
+                        variant={
+                          entry.status === "selected"
+                            ? "default"
+                            : entry.status === "not_selected"
+                              ? "secondary"
+                              : "outline"
+                        }
+                        className="text-xs"
+                      >
+                        {entry.status.replace("_", " ")}
+                      </Badge>
+                      {entry.status === "pending" && votingOpen && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mt-2 h-7 border-destructive/40 text-xs text-destructive hover:bg-destructive/10"
+                          onClick={() => cancelBallotEntry(entry.id)}
+                        >
+                          Cancel ballot
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-primary">{entry.ballotScore}</div>
-                    <Badge
-                      variant={
-                        entry.status === "selected"
-                          ? "default"
-                          : entry.status === "not_selected"
-                            ? "secondary"
-                            : "outline"
-                      }
-                      className="text-xs"
-                    >
-                      {entry.status.replace("_", " ")}
-                    </Badge>
-                    {entry.status === "pending" && votingOpen && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="mt-1 h-6 text-xs"
-                        onClick={() => cancelBallotEntry(entry.id)}
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </CardContent>
         </Card>
       )}
@@ -209,6 +223,9 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
               <Badge variant="outline" className="border-emerald-500 text-emerald-700">
                 Priority: not chosen last week
               </Badge>
+            )}
+            {!myProfile.wasNotChosenLastWeek && (
+              <Badge variant="outline">Last week chosen: yes</Badge>
             )}
             <Badge variant="outline">
               Bookings this month: {myProfile.bookingsThisMonth}/
