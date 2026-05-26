@@ -2,7 +2,8 @@
 
 **Smarter badminton court booking for Tampines residents** — built for **JOM AI Tampines**.
 
-🔗 **[Live demo](https://v0-jomai-booking.vercel.app/)**
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://v0-jomai-booking.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open%20App-00C7B7?style=for-the-badge)](https://v0-jomai-booking.vercel.app/)
 
 BookIt is a prototype facility-booking platform that replaces midnight queue-jumping with a **fair weekly ballot**: residents apply for slots, are ranked by a transparent fairness score (not submission time), and winners are allocated after voting closes. The demo runs entirely in the browser with mock data and `localStorage` — no backend required to try it.
 
