@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { Booking, MatchmakingPost } from "@/lib/mockData";
 import { initialBookings, initialMatchmakingPosts } from "@/lib/mockData";
+import { dedupeBookings, isDuplicateBooking } from "@/lib/bookingDedupe";
 
 interface BookingContextType {
   bookings: Booking[];
@@ -35,7 +36,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     // TODO: Replace with API call to fetch user's bookings
     const storedBookings = localStorage.getItem("bookit-bookings");
     if (storedBookings) {
-      setBookings(JSON.parse(storedBookings));
+      setBookings(dedupeBookings(JSON.parse(storedBookings)));
     } else {
       setBookings(initialBookings);
       localStorage.setItem("bookit-bookings", JSON.stringify(initialBookings));
@@ -54,11 +55,15 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Persist bookings to localStorage
+  // Persist bookings to localStorage (always store deduped list)
   useEffect(() => {
-    if (bookings.length > 0) {
-      localStorage.setItem("bookit-bookings", JSON.stringify(bookings));
+    if (bookings.length === 0) return;
+    const cleaned = dedupeBookings(bookings);
+    if (cleaned.length !== bookings.length) {
+      setBookings(cleaned);
+      return;
     }
+    localStorage.setItem("bookit-bookings", JSON.stringify(cleaned));
   }, [bookings]);
 
   // Persist matchmaking posts to localStorage
@@ -73,12 +78,20 @@ export function BookingProvider({ children }: { children: ReactNode }) {
 
   const addBooking = (booking: Omit<Booking, "id" | "createdAt">) => {
     // TODO: Replace with API call to create booking
-    const newBooking: Booking = {
-      ...booking,
-      id: `booking-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setBookings((prev) => [...prev, newBooking]);
+    setBookings((prev) => {
+      if (isDuplicateBooking(prev, booking)) {
+        return prev;
+      }
+      const id = booking.ballotEntryId
+        ? `booking-${booking.ballotEntryId}`
+        : `booking-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const newBooking: Booking = {
+        ...booking,
+        id,
+        createdAt: new Date().toISOString(),
+      };
+      return [...prev, newBooking];
+    });
   };
 
   const cancelBooking = (bookingId: string) => {
