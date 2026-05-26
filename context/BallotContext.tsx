@@ -72,7 +72,9 @@ interface BallotContextType {
     ccName: string;
     ccNotes: string;
   }) => { success: boolean; error?: string };
-  runWeeklyAllocation: (addBooking?: (booking: Omit<Booking, "id" | "createdAt">) => void) => void;
+  runWeeklyAllocation: (
+    replaceBallotBookings?: (bookings: Omit<Booking, "id" | "createdAt">[]) => void,
+  ) => void;
   cancelBookingWithPolicy: (
     booking: Booking,
     user: User,
@@ -296,45 +298,55 @@ export function BallotProvider({ children }: { children: ReactNode }) {
     [currentWeek.id],
   );
 
-  const runWeeklyAllocation = useCallback((addBooking?: (booking: Omit<Booking, "id" | "createdAt">) => void) => {
-    setEntries((prev) => {
-      const weekEntries = prev.filter((e) => e.weekId === currentWeek.id);
-      const allocated = allocateWeekEntries(weekEntries);
-      const byId = new Map(allocated.map((e) => [e.id, e]));
+  const runWeeklyAllocation = useCallback(
+    (
+      replaceBallotBookings?: (
+        bookings: Omit<Booking, "id" | "createdAt">[],
+      ) => void,
+    ) => {
+      let selectedBookings: Omit<Booking, "id" | "createdAt">[] = [];
 
-      setProfiles((profilePrev) =>
-        profilePrev.map((p) => {
-          const userEntries = allocated.filter((e) => e.userId === p.userId);
-          if (userEntries.length === 0) return p;
-          const selected = userEntries.some((e) => e.status === "selected");
-          return { ...p, wasNotChosenLastWeek: !selected };
-        }),
-      );
+      setEntries((prev) => {
+        const weekEntries = prev.filter((e) => e.weekId === currentWeek.id);
+        const allocated = allocateWeekEntries(weekEntries);
+        const byId = new Map(allocated.map((e) => [e.id, e]));
 
-      // Create bookings for selected entries if addBooking is provided
-      if (addBooking) {
-        allocated.forEach((entry) => {
-          if (entry.status === "selected") {
-            addBooking({
-              courtId: entry.courtId,
-              slotId: entry.slotId,
-              userId: entry.userId,
-              userName: entry.userName,
-              date: entry.date,
-              startTime: entry.startTime,
-              endTime: entry.endTime,
-              openToSharing: entry.openToSharing,
-              ballotEntryId: entry.id,
-              status: "confirmed",
-              amountPaid: 8,
-            });
-          }
-        });
+        selectedBookings = allocated
+          .filter((e) => e.status === "selected")
+          .map((entry) => ({
+            courtId: entry.courtId,
+            slotId: entry.slotId,
+            userId: entry.userId,
+            userName: entry.userName,
+            date: entry.date,
+            startTime: entry.startTime,
+            endTime: entry.endTime,
+            openToSharing: entry.openToSharing,
+            ballotEntryId: entry.id,
+            status: "confirmed" as const,
+            amountPaid: 8,
+          }));
+
+        setProfiles((profilePrev) =>
+          profilePrev.map((p) => {
+            const userEntries = allocated.filter((e) => e.userId === p.userId);
+            if (userEntries.length === 0) return p;
+            const selected = userEntries.some((e) => e.status === "selected");
+            return { ...p, wasNotChosenLastWeek: !selected };
+          }),
+        );
+
+        return prev.map((e) =>
+          e.weekId === currentWeek.id ? (byId.get(e.id) ?? e) : e,
+        );
+      });
+
+      if (replaceBallotBookings) {
+        replaceBallotBookings(selectedBookings);
       }
-
-      return prev.map((e) => (e.weekId === currentWeek.id ? byId.get(e.id) ?? e : e));
-    });
-  }, [currentWeek.id]);
+    },
+    [currentWeek.id],
+  );
 
   const cancelBookingWithPolicy = useCallback(
     (booking: Booking, user: User) => {

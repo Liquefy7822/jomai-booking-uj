@@ -57,7 +57,7 @@ function roleBadge(role: string) {
 
 export function BallotTransparencyPanel({ compact = false, showDemoButton = false, simplified = false }: { compact?: boolean; showDemoButton?: boolean; simplified?: boolean }) {
   const { user } = useUser();
-  const { addBooking, resetDemoData } = useBooking();
+  const { replaceBallotBookings, resetDemoData } = useBooking();
   const {
     currentWeek,
     rankedEntries,
@@ -302,7 +302,12 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
             </CardDescription>
           </div>
           {showDemoButton && (
-            <Button type="button" variant="outline" size="sm" onClick={() => runWeeklyAllocation(addBooking)}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => runWeeklyAllocation(replaceBallotBookings)}
+            >
               Run demo allocation
             </Button>
           )}

@@ -15,6 +15,10 @@ interface BookingContextType {
   bookings: Booking[];
   matchmakingPosts: MatchmakingPost[];
   addBooking: (booking: Omit<Booking, "id" | "createdAt">) => void;
+  /** Replaces all ballot-allocated bookings (profile list) in one update. */
+  replaceBallotBookings: (
+    bookings: Omit<Booking, "id" | "createdAt">[],
+  ) => void;
   cancelBooking: (bookingId: string) => void;
   getUserBookings: (userId: string) => Booking[];
   addMatchmakingPost: (post: Omit<MatchmakingPost, "id" | "createdAt">) => void;
@@ -94,6 +98,23 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const replaceBallotBookings = (
+    incoming: Omit<Booking, "id" | "createdAt">[],
+  ) => {
+    setBookings((prev) => {
+      const withoutBallot = prev.filter((b) => !b.ballotEntryId);
+      const createdAt = new Date().toISOString();
+      const fresh: Booking[] = incoming.map((booking) => ({
+        ...booking,
+        id: booking.ballotEntryId
+          ? `booking-${booking.ballotEntryId}`
+          : `booking-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        createdAt,
+      }));
+      return [...withoutBallot, ...fresh];
+    });
+  };
+
   const cancelBooking = (bookingId: string) => {
     // TODO: Replace with API call to cancel booking
     setBookings((prev) => prev.filter((b) => b.id !== bookingId));
@@ -168,6 +189,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         bookings,
         matchmakingPosts,
         addBooking,
+        replaceBallotBookings,
         cancelBooking,
         getUserBookings,
         addMatchmakingPost,
