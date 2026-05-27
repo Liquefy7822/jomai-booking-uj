@@ -31,6 +31,10 @@ import {
   validateBallotApplication,
 } from "@/lib/ballotLogic";
 import {
+  estimateSlotWinChance,
+  getSlotEntries,
+} from "@/lib/ballotChance";
+import {
   initialBallotEntries,
   initialBallotProfiles,
   initialCancellationEvents,
@@ -38,7 +42,14 @@ import {
   initialNeighbourhoodNotices,
 } from "@/lib/data/initialBallot";
 
-const STORAGE_KEY = "bookit-ballot";
+const STORAGE_KEY = "bookit-ballot-v2";
+
+export interface BallotNotification {
+  courtName: string;
+  winChancePercent: number;
+  usedMonthlyOverride: boolean;
+  message: string;
+}
 
 interface BallotStorage {
   entries: BallotEntry[];
@@ -62,11 +73,17 @@ interface BallotContextType {
     role: UserRole;
     slot: TimeSlot;
     courtId: string;
+    courtName?: string;
     openToSharing: boolean;
     partnerUserId?: string;
     useMonthlyOverride?: boolean;
     bookings: Booking[];
-  }) => { success: boolean; error?: string; entry?: BallotEntry };
+  }) => {
+    success: boolean;
+    error?: string;
+    entry?: BallotEntry;
+    winChancePercent?: number;
+  };
   submitCoachApplication: (params: {
     user: User;
     ccName: string;
@@ -87,6 +104,8 @@ interface BallotContextType {
   cancelBallotEntry: (entryId: string) => void;
   resetBallot: () => void;
   votingOpen: boolean;
+  ballotNotification: BallotNotification | null;
+  dismissBallotNotification: () => void;
 }
 
 const BallotContext = createContext<BallotContextType | undefined>(undefined);
@@ -104,7 +123,10 @@ function loadStorage(): BallotStorage {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) {
     try {
-      return JSON.parse(raw) as BallotStorage;
+      const parsed = JSON.parse(raw) as BallotStorage;
+      if ((parsed.entries?.length ?? 0) > 0) {
+        return parsed;
+      }
     } catch {
       /* fall through */
     }
@@ -127,7 +149,13 @@ export function BallotProvider({ children }: { children: ReactNode }) {
   );
   const [cancellations, setCancellations] = useState<CancellationEvent[]>([]);
   const [notices, setNotices] = useState<NeighbourhoodNotice[]>([]);
+  const [ballotNotification, setBallotNotification] =
+    useState<BallotNotification | null>(null);
   const [hydrated, setHydrated] = useState(false);
+
+  const dismissBallotNotification = useCallback(() => {
+    setBallotNotification(null);
+  }, []);
 
   useEffect(() => {
     const data = loadStorage();
@@ -187,11 +215,17 @@ export function BallotProvider({ children }: { children: ReactNode }) {
       role: UserRole;
       slot: TimeSlot;
       courtId: string;
+      courtName?: string;
       openToSharing: boolean;
       partnerUserId?: string;
       useMonthlyOverride?: boolean;
       bookings: Booking[];
-    }): { success: boolean; error?: string; entry?: BallotEntry } => {
+    }): {
+      success: boolean;
+      error?: string;
+      entry?: BallotEntry;
+      winChancePercent?: number;
+    } => {
       const baseProfile = getProfile(params.user.id);
       const monthBallotCount = entries.filter((e) => {
         if (e.userId !== params.user.id) return false;
@@ -275,7 +309,27 @@ export function BallotProvider({ children }: { children: ReactNode }) {
       }
 
       setEntries((prev) => [...prev, entry]);
-      return { success: true, entry };
+
+      const slotQueue = getSlotEntries(
+        [...entries, entry],
+        params.courtId,
+        params.slot.id,
+        params.slot.date,
+      ).filter((e) => e.id !== entry.id);
+
+      const winChancePercent = estimateSlotWinChance(score, slotQueue, {
+        usedMonthlyOverride: params.useMonthlyOverride,
+      });
+
+      setBallotNotification({
+        courtName: params.courtName ?? params.courtId,
+        winChancePercent,
+        usedMonthlyOverride: Boolean(params.useMonthlyOverride),
+        message:
+          "Queued for this week's ballot. Results after voting closes Sunday.",
+      });
+
+      return { success: true, entry, winChancePercent };
     },
     [currentWeek, entries, getProfile, upsertProfile],
   );
@@ -422,6 +476,7 @@ export function BallotProvider({ children }: { children: ReactNode }) {
     setCoachApplications(initialCoachApplications);
     setCancellations(initialCancellationEvents);
     setNotices(initialNeighbourhoodNotices);
+    setBallotNotification(null);
   }, []);
 
   const votingOpen = isVotingOpen(currentWeek);
@@ -444,6 +499,8 @@ export function BallotProvider({ children }: { children: ReactNode }) {
         cancelBallotEntry,
         resetBallot,
         votingOpen,
+        ballotNotification,
+        dismissBallotNotification,
       }}
     >
       {children}

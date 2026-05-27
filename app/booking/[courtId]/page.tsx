@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useMemo, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { useBooking } from "@/context/BookingContext";
 import { useBallot } from "@/context/BallotContext";
-import { getTargetBallotWeek } from "@/lib/ballotLogic";
+import {
+  calculateBallotScore,
+  getTargetBallotWeek,
+  simulateAllSlotsBooked,
+} from "@/lib/ballotLogic";
+import { estimateSlotWinChance, getSlotEntries } from "@/lib/ballotChance";
 import type { UserRole } from "@/lib/data/ballotTypes";
 import {
   getCourtById,
@@ -21,8 +26,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Check, Users, ArrowLeft } from "lucide-react";
+import { MapPin, Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function BookingPage({
   params,
@@ -32,7 +38,7 @@ export default function BookingPage({
   const { courtId } = use(params);
   const { user, isLoading: userLoading } = useUser();
   const { bookings } = useBooking();
-  const { submitBallotEntry, currentWeek, votingOpen } = useBallot();
+  const { submitBallotEntry, currentWeek, votingOpen, entries, getProfile } = useBallot();
   const router = useRouter();
 
   const ballotWeek = getTargetBallotWeek();
@@ -47,7 +53,6 @@ export default function BookingPage({
   const [openToSharing, setOpenToSharing] = useState(false);
   const [useOverride, setUseOverride] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
   const [ballotError, setBallotError] = useState<string | null>(null);
 
   // TODO: Replace with API call to fetch court details
@@ -60,6 +65,79 @@ export default function BookingPage({
   const bookedSlotIds = bookings
     .filter((b) => b.courtId === courtId && b.date === selectedDate)
     .map((b) => b.slotId);
+  const ballotCountsBySlotId = entries
+    .filter((entry) => entry.courtId === courtId && entry.date === selectedDate)
+    .reduce<Record<string, number>>((acc, entry) => {
+      acc[entry.slotId] = (acc[entry.slotId] ?? 0) + 1;
+      return acc;
+    }, {});
+  const ballotCountForCourtDay = Object.values(ballotCountsBySlotId).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+  const selectedSlotBallotCount = selectedSlot ? ballotCountsBySlotId[selectedSlot.id] ?? 0 : 0;
+
+  const role: UserRole = user?.role ?? "resident";
+  const profile = user ? getProfile(user.id) : null;
+  const projectedScore =
+    selectedSlot === null || !user || !profile
+      ? null
+      : calculateBallotScore(user, role, { ...selectedSlot, date: selectedDate }, {
+          week: currentWeek,
+          profile,
+          existingEntries: entries,
+          allSlotsBooked: simulateAllSlotsBooked(
+            courtId,
+            selectedDate,
+            bookings,
+            entries,
+          ),
+          useMonthlyOverride: useOverride && role === "elderly",
+        });
+
+  const winChanceBySlotId = useMemo(() => {
+    if (!user || !profile) return {};
+    const map: Record<string, number> = {};
+    for (const slot of slots) {
+      const { score } = calculateBallotScore(
+        user,
+        role,
+        { ...slot, date: selectedDate },
+        {
+          week: currentWeek,
+          profile,
+          existingEntries: entries,
+          allSlotsBooked: simulateAllSlotsBooked(
+            courtId,
+            selectedDate,
+            bookings,
+            entries,
+          ),
+          useMonthlyOverride: useOverride && role === "elderly",
+        },
+      );
+      const slotQueue = getSlotEntries(entries, courtId, slot.id, selectedDate);
+      map[slot.id] = estimateSlotWinChance(score, slotQueue, {
+        usedMonthlyOverride: useOverride && role === "elderly",
+      });
+    }
+    return map;
+  }, [
+    slots,
+    user,
+    profile,
+    role,
+    selectedDate,
+    currentWeek,
+    entries,
+    bookings,
+    courtId,
+    useOverride,
+  ]);
+
+  const selectedWinChance = selectedSlot
+    ? winChanceBySlotId[selectedSlot.id]
+    : undefined;
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -110,7 +188,6 @@ export default function BookingPage({
 
     await new Promise((resolve) => setTimeout(resolve, 600));
 
-    const role: UserRole = user.role ?? "resident";
     const slotForBallot = { ...selectedSlot, date: selectedDate };
 
     const result = submitBallotEntry({
@@ -118,6 +195,7 @@ export default function BookingPage({
       role,
       slot: slotForBallot,
       courtId: court.id,
+      courtName: court.name,
       openToSharing,
       useMonthlyOverride: useOverride && role === "elderly",
       bookings,
@@ -130,36 +208,8 @@ export default function BookingPage({
       return;
     }
 
-    setBookingSuccess(true);
-    setTimeout(() => {
-      router.push("/ballot");
-    }, 2000);
+    setSelectedSlot(null);
   };
-
-  if (bookingSuccess) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-              <Check className="h-8 w-8 text-emerald-600" />
-            </div>
-            <h2 className="text-xl font-semibold text-foreground">
-              Ballot application submitted
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              Your request for {court.name} is in this week&apos;s ballot queue.
-              Results are allocated by fairness score after voting closes Sunday.
-            </p>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Redirecting to the transparency panel…
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,6 +230,9 @@ export default function BookingPage({
             <MapPin className="h-4 w-4" />
             <span>{court.location}</span>
           </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {ballotCountForCourtDay} ballot{ballotCountForCourtDay === 1 ? "" : "s"} submitted for this court today
+          </p>
         </div>
       </div>
 
@@ -221,7 +274,7 @@ export default function BookingPage({
                     ))}
                   </div>
                   <div className="mt-4 text-lg font-semibold text-primary">
-                    ${court.pricePerHour}/hour
+                    ${court.pricePerHour}/hour base (+$4 peak hour)
                   </div>
                 </CardContent>
               </Card>
@@ -287,6 +340,8 @@ export default function BookingPage({
                 selectedSlot={selectedSlot}
                 onSelectSlot={setSelectedSlot}
                 bookedSlotIds={bookedSlotIds}
+                ballotCountsBySlotId={ballotCountsBySlotId}
+                winChanceBySlotId={winChanceBySlotId}
               />
 
               {/* Booking Summary */}
@@ -320,6 +375,37 @@ export default function BookingPage({
                         <span className="text-muted-foreground">Price</span>
                         <span className="font-medium">${selectedSlot.price}.00</span>
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Your priority score</span>
+                        <span className="font-medium">{user.priorityScore}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Ballots on this slot</span>
+                        <span className="font-medium">{selectedSlotBallotCount}</span>
+                      </div>
+                      {projectedScore && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Projected ballot score</span>
+                          <span className="font-medium">{projectedScore.score}</span>
+                        </div>
+                      )}
+                      {selectedWinChance !== undefined && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Estimated win chance</span>
+                          <span
+                            className={cn(
+                              "font-semibold",
+                              selectedWinChance >= 55
+                                ? "text-emerald-700"
+                                : selectedWinChance >= 35
+                                  ? "text-amber-700"
+                                  : "text-red-600",
+                            )}
+                          >
+                            {selectedWinChance}%
+                          </span>
+                        </div>
+                      )}
                       {openToSharing && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Sharing</span>

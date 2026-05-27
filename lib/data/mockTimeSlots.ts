@@ -1,6 +1,23 @@
 import type { TimeSlot } from './types';
 import { courts } from './mockCourts';
 
+function isPeakHour(dateStr: string, hour: number): boolean {
+  const date = new Date(dateStr);
+  const day = date.getDay();
+  const isWeekend = day === 0 || day === 6;
+  if (isWeekend) {
+    return hour >= 9 && hour < 18;
+  }
+  return hour >= 18 && hour < 22;
+}
+
+function calculateSlotPrice(basePrice: number, dateStr: string, hour: number): number {
+  if (isPeakHour(dateStr, hour)) {
+    return basePrice + 4;
+  }
+  return basePrice;
+}
+
 // Generate time slots for next 7 days
 const generateTimeSlots = (): TimeSlot[] => {
   const slots: TimeSlot[] = [];
@@ -27,7 +44,7 @@ const generateTimeSlots = (): TimeSlot[] => {
           startTime,
           endTime,
           isAvailable,
-          price: court.pricePerHour,
+          price: calculateSlotPrice(court.pricePerHour, dateStr, hour),
         });
       }
     }
@@ -54,7 +71,7 @@ function buildSlotsForDate(courtId: string, dateStr: string): TimeSlot[] {
       startTime,
       endTime,
       isAvailable: seed % 3 !== 0,
-      price: court.pricePerHour,
+      price: calculateSlotPrice(court.pricePerHour, dateStr, hour),
     });
   }
   return slots;

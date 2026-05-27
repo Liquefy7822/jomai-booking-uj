@@ -6,13 +6,11 @@ import type {
   UserBallotProfile,
 } from "./ballotTypes";
 import { getTargetBallotWeek } from "@/lib/ballotLogic";
+import { buildSeedBallotEntries } from "./seedBallotEntries";
 
 const week = getTargetBallotWeek();
-const weekSaturday = new Date(week.weekStart);
-weekSaturday.setDate(weekSaturday.getDate() + 5);
-const saturdayISO = weekSaturday.toISOString().split("T")[0];
 
-export const initialBallotEntries: BallotEntry[] = [];
+export const initialBallotEntries: BallotEntry[] = buildSeedBallotEntries();
 
 export const initialBallotProfiles: UserBallotProfile[] = [
   {

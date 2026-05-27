@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import { useBallot } from "@/context/BallotContext";
 import { courts } from "@/lib/mockData";
 import { CourtCard } from "@/components/CourtCard";
 import { Navbar } from "@/components/Navbar";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const { user, isLoading } = useUser();
+  const { entries } = useBallot();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -108,7 +110,11 @@ export default function HomePage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {/* TODO: Replace with API call to fetch courts */}
               {filteredCourts.map((court) => (
-                <CourtCard key={court.id} court={court} />
+                <CourtCard
+                  key={court.id}
+                  court={court}
+                  ballotCount={entries.filter((entry) => entry.courtId === court.id).length}
+                />
               ))}
             </div>
           )}

@@ -7,6 +7,7 @@ import { BallotProvider } from "@/context/BallotContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AdminProvider } from "@/context/AdminContext";
 import { AiChatWidget } from "@/components/AiChatWidget";
+import { BallotNotificationBanner } from "@/components/BallotNotificationBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -66,6 +67,7 @@ export default function RootLayout({
             <UserProvider>
               <BookingProvider>
                 <BallotProvider>
+                  <BallotNotificationBanner />
                   {children}
                   <AiChatWidget />
                 </BallotProvider>

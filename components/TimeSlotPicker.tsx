@@ -12,6 +12,8 @@ interface TimeSlotPickerProps {
   selectedSlot: TimeSlot | null;
   onSelectSlot: (slot: TimeSlot) => void;
   bookedSlotIds: string[];
+  ballotCountsBySlotId?: Record<string, number>;
+  winChanceBySlotId?: Record<string, number>;
 }
 
 export function TimeSlotPicker({
@@ -19,6 +21,8 @@ export function TimeSlotPicker({
   selectedSlot,
   onSelectSlot,
   bookedSlotIds,
+  ballotCountsBySlotId = {},
+  winChanceBySlotId = {},
 }: TimeSlotPickerProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const slotsPerPage = 8;
@@ -63,6 +67,9 @@ export function TimeSlotPicker({
           const isBooked = bookedSlotIds.includes(slot.id);
           const isUnavailable = !slot.isAvailable || isBooked;
           const isSelected = selectedSlot?.id === slot.id;
+          const ballotCount = ballotCountsBySlotId[slot.id] ?? 0;
+          const winChance = winChanceBySlotId[slot.id];
+          const isPeak = slot.price > 8;
 
           return (
             <button
@@ -82,9 +89,29 @@ export function TimeSlotPicker({
               <span className="text-sm font-medium">
                 {formatTime(slot.startTime)}
               </span>
-              <span className="text-xs text-muted-foreground">
-                ${slot.price}
+              <span className="text-xs text-muted-foreground">${slot.price}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {ballotCount} ballot{ballotCount === 1 ? "" : "s"}
               </span>
+              {winChance !== undefined && (
+                <span
+                  className={cn(
+                    "text-[11px] font-semibold",
+                    winChance >= 55
+                      ? "text-emerald-700"
+                      : winChance >= 35
+                        ? "text-amber-700"
+                        : "text-red-600",
+                  )}
+                >
+                  {winChance}% chance
+                </span>
+              )}
+              {isPeak && (
+                <span className="text-[11px] font-medium text-amber-700">
+                  Peak
+                </span>
+              )}
             </button>
           );
         })}

@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 
 interface CourtCardProps {
   court: Court;
+  ballotCount?: number;
 }
 
-export function CourtCard({ court }: CourtCardProps) {
+export function CourtCard({ court, ballotCount = 0 }: CourtCardProps) {
   return (
     <Link href={`/booking/${court.id}`}>
       <Card className="overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
@@ -69,6 +70,9 @@ export function CourtCard({ court }: CourtCardProps) {
                 </span>
               )}
             </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {ballotCount} ballot{ballotCount === 1 ? "" : "s"} in queue
+            </p>
           </div>
         </CardContent>
       </Card>
