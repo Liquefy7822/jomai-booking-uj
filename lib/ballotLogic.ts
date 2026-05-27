@@ -13,6 +13,8 @@ export const BALLOT_RULES = {
   minCancellationHours: 36,
   lateCancellationFeeMultiplier: 0.5,
   elderlyMonthlyOverrideLimit: 1,
+  /** Score bonus when elderly uses monthly override with a new partner */
+  monthlyOverrideScoreBonus: 65,
 } as const;
 
 export const BALLOT_RULES_SUMMARY = [
@@ -176,8 +178,10 @@ export function calculateBallotScore(
     isNewPartner(user.id, ctx.partnerUserId, ctx.profile) &&
     !ctx.profile.monthlyOverrideUsed
   ) {
-    score += 40;
-    breakdown.push("+40 one-time monthly ballot override (new partner)");
+    score += BALLOT_RULES.monthlyOverrideScoreBonus;
+    breakdown.push(
+      `+${BALLOT_RULES.monthlyOverrideScoreBonus} one-time monthly ballot override (new partner)`,
+    );
   }
 
   score += Math.min(15, Math.floor((user.priorityScore ?? 50) / 10));

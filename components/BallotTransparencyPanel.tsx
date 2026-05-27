@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -18,7 +17,11 @@ import {
 import { useBallot } from "@/context/BallotContext";
 import { useUser } from "@/context/UserContext";
 import { useBooking } from "@/context/BookingContext";
-import { BALLOT_RULES, BALLOT_RULES_SUMMARY } from "@/lib/ballotLogic";
+import { BALLOT_RULES } from "@/lib/ballotLogic";
+import {
+  getPersonalizedSlotQueue,
+  getSlotCompetitors,
+} from "@/lib/ballotQueueView";
 import { getCourtById } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,7 +63,6 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
   const { replaceBallotBookings, resetDemoData } = useBooking();
   const {
     currentWeek,
-    rankedEntries,
     coachApplications,
     cancellations,
     neighbourhoodNotices,
@@ -90,23 +92,6 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
     const pending = myBallotEntries.filter((e) => e.status === "pending");
     if (pending.length === 0) return;
     pending.forEach((e) => cancelBallotEntry(e.id));
-  };
-
-  // Group ranked entries by court
-  const entriesByCourt = rankedEntries.reduce((acc, entry) => {
-    const courtId = entry.courtId;
-    if (!acc[courtId]) {
-      acc[courtId] = [];
-    }
-    acc[courtId].push(entry);
-    return acc;
-  }, {} as Record<string, typeof rankedEntries>);
-
-  // State for dismissed courts
-  const [dismissedCourts, setDismissedCourts] = useState<Set<string>>(new Set());
-
-  const dismissCourt = (courtId: string) => {
-    setDismissedCourts((prev: Set<string>) => new Set([...prev, courtId]));
   };
 
   return (
@@ -172,8 +157,15 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
             ) : (
               myBallotEntries.map((entry) => {
                 const court = getCourtById(entry.courtId);
-                const rank =
-                  rankedEntries.findIndex((e) => e.id === entry.id) + 1;
+                const slotPeers = getSlotCompetitors(
+                  entries,
+                  entry.courtId,
+                  entry.slotId,
+                  entry.date,
+                );
+                const { position } = user
+                  ? getPersonalizedSlotQueue(slotPeers, user.id)
+                  : { position: 0 };
                 return (
                   <div
                     key={entry.id}
@@ -185,7 +177,8 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
                         {entry.date} {entry.startTime} - {entry.endTime}
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
-                        Queue rank: #{rank > 0 ? rank : "-"} · Score: {entry.ballotScore}
+                        Slot position: #{position > 0 ? position : "-"} · Score:{" "}
+                        {entry.ballotScore}
                       </div>
                     </div>
                     <div className="text-right">
@@ -294,11 +287,11 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
               <ListOrdered className="size-4" />
-              Ballot queue (not booking order)
+              Your slot queue
             </CardTitle>
             <CardDescription>
-              Sorted by fairness score only. Submission time is shown for audit but
-              does not affect rank.
+              Positions ahead of you are shown as numbers only (no names). Then your
+              row. Others behind you are hidden.
             </CardDescription>
           </div>
           {showDemoButton && (
@@ -313,94 +306,113 @@ export function BallotTransparencyPanel({ compact = false, showDemoButton = fals
           )}
         </CardHeader>
         <CardContent className="space-y-4">
-          {rankedEntries.length === 0 ? (
-            <p className="text-center text-muted-foreground">No applications yet for this week.</p>
+          {!user ? (
+            <p className="text-center text-sm text-muted-foreground">
+              Sign in and apply for a slot to see your queue position.
+            </p>
+          ) : myBallotEntries.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground">
+              No applications yet. Book a court to join a slot queue.
+            </p>
           ) : (
-            Object.entries(entriesByCourt)
-              .filter(([courtId]) => !dismissedCourts.has(courtId))
-              .map(([courtId, courtEntries]) => {
-                const court = getCourtById(courtId);
-                return (
-                  <Card key={courtId} className="border-muted">
-                    <CardHeader className="flex flex-row items-center justify-between pb-3">
-                      <CardTitle className="text-base">{court?.name || courtId}</CardTitle>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 text-xs"
-                        onClick={() => dismissCourt(courtId)}
-                      >
-                        Dismiss
-                      </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-12">#</TableHead>
-                            <TableHead>Applicant</TableHead>
-                            <TableHead>Slot</TableHead>
-                            <TableHead className="text-right">Score</TableHead>
-                            {!simplified && <TableHead>Applied (audit)</TableHead>}
-                            <TableHead>Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {courtEntries.map((entry, index) => (
-                            <TableRow key={entry.id}>
-                              <TableCell className="font-medium">{index + 1}</TableCell>
+            myBallotEntries.map((myEntry) => {
+              const court = getCourtById(myEntry.courtId);
+              const slotPeers = getSlotCompetitors(
+                entries,
+                myEntry.courtId,
+                myEntry.slotId,
+                myEntry.date,
+              );
+              const { ahead, you, position } = getPersonalizedSlotQueue(
+                slotPeers,
+                user.id,
+              );
+
+              return (
+                <Card key={myEntry.id} className="border-muted">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">
+                      {court?.name || myEntry.courtId}
+                    </CardTitle>
+                    <CardDescription>
+                      {myEntry.date} · {myEntry.startTime} – {myEntry.endTime}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {!you ? (
+                      <p className="text-sm text-muted-foreground">
+                        Queue data unavailable for this slot.
+                      </p>
+                    ) : (
+                      <>
+                        {ahead.length > 0 ? (
+                          <div>
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">
+                              Ahead of you ({ahead.length})
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {ahead.map((entry, index) => (
+                                <span
+                                  key={entry.id}
+                                  className="inline-flex size-9 items-center justify-center rounded-full border bg-muted/50 text-sm font-semibold text-muted-foreground"
+                                  title={`Position ${index + 1} in queue`}
+                                >
+                                  {index + 1}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                            You are first in line for this slot.
+                          </p>
+                        )}
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-12">#</TableHead>
+                              <TableHead>Applicant</TableHead>
+                              <TableHead className="text-right">Score</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            <TableRow className="bg-primary/5">
+                              <TableCell className="font-medium">{position}</TableCell>
                               <TableCell>
-                                <div className="font-medium">{entry.userName}</div>
-                                <Badge className={cn("mt-1 text-xs", roleBadge(entry.userRole))}>
-                                  {entry.userRole}
+                                <div className="font-semibold text-foreground">You</div>
+                                <Badge
+                                  className={cn("mt-1 text-xs", roleBadge(you.userRole))}
+                                >
+                                  {you.userRole}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-sm">
-                                {entry.date} {entry.startTime}
+                              <TableCell className="text-right font-semibold text-primary">
+                                {you.ballotScore}
                               </TableCell>
-                              <TableCell className="text-right">
-                                <span className="font-semibold text-primary">
-                                  {entry.ballotScore}
-                                </span>
-                                {!simplified && !compact && entry.scoreBreakdown.length > 0 && (
-                                  <ul className="mt-1 text-xs text-muted-foreground">
-                                    {entry.scoreBreakdown.slice(0, 2).map((line) => (
-                                      <li key={line}>{line}</li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </TableCell>
-                              {!simplified && (
-                                <TableCell className="text-xs text-muted-foreground">
-                                  {new Date(entry.submittedAt).toLocaleString("en-SG", {
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </TableCell>
-                              )}
                               <TableCell>
                                 <Badge
                                   variant={
-                                    entry.status === "selected"
+                                    you.status === "selected"
                                       ? "default"
-                                      : entry.status === "not_selected"
+                                      : you.status === "not_selected"
                                         ? "secondary"
                                         : "outline"
                                   }
+                                  className="text-xs"
                                 >
-                                  {entry.status.replace("_", " ")}
+                                  {you.status.replace("_", " ")}
                                 </Badge>
                               </TableCell>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                );
-              })
+                          </TableBody>
+                        </Table>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </CardContent>
       </Card>

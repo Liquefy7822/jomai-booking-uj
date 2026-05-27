@@ -310,7 +310,7 @@ export default function BookingPage({
                             Monthly ballot override
                           </Label>
                           <p className="text-xs text-muted-foreground">
-                            One-time boost when playing with a new partner
+                            +65 score boost when playing with a new partner (once per month)
                           </p>
                         </div>
                         <Switch

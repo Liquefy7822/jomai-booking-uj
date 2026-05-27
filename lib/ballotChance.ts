@@ -1,5 +1,7 @@
 import type { BallotEntry } from "@/lib/data/ballotTypes";
 
+const OVERRIDE_WIN_CHANCE_BONUS = 38;
+
 /**
  * Estimate win chance (0–100%) for one slot given your projected ballot score
  * and existing queue entries. One winner per slot; queue size lowers odds.
@@ -34,10 +36,11 @@ export function estimateSlotWinChance(
   }
 
   if (options?.usedMonthlyOverride) {
-    pct += 22;
+    pct += OVERRIDE_WIN_CHANCE_BONUS;
   }
 
-  return Math.max(4, Math.min(94, Math.round(pct)));
+  const cap = options?.usedMonthlyOverride ? 97 : 94;
+  return Math.max(4, Math.min(cap, Math.round(pct)));
 }
 
 export function getSlotEntries(
